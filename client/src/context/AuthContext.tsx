@@ -1,12 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useEffectEvent } from 'react';
 import { api } from '@/lib/api';
 import { socketManager } from '@/lib/socket';
-import { Profile } from '@/types/chat';
+import { Profile, AuthSession } from '@/types/chat';
 
 interface AuthContextType {
-  user: any | null;
+  user: AuthSession['user'] | null;
   profile: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -32,7 +32,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<AuthSession['user'] | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.data) {
         setUser(res.data.user);
         setProfile(res.data.profile);
-        socketManager.connect(token);
+        socketManager.connect(api.getAccessToken() || token);
       }
     } catch {
       // Token might be invalid or expired; try refresh
@@ -76,8 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const initialize = useEffectEvent(initAuth);
   useEffect(() => {
-    initAuth();
+    // Session restoration must also resolve the unauthenticated loading state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    initialize();
   }, [initAuth]);
 
   const login = async (email: string, pass: string, displayName?: string) => {

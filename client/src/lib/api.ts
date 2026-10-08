@@ -5,6 +5,11 @@ import {
   Message,
   Profile,
   Attachment,
+  CampusRoom,
+  CampusEvent,
+  CampusTicket,
+  MoodleAssignment,
+  MessDayMenu,
 } from '@/types/chat';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -117,6 +122,7 @@ class ApiClient {
     const res = await fetch(url, {
       ...options,
       headers,
+      signal: options.signal || AbortSignal.timeout(20000),
     });
 
     if (res.status === 204) {
@@ -131,7 +137,7 @@ class ApiClient {
     }
 
     const contentType = res.headers.get('content-type');
-    let json: any = null;
+    let json: ApiResponse<T> & { error?: { message?: string; code?: string; details?: unknown } };
     if (contentType && contentType.includes('application/json')) {
       json = await res.json();
     } else {
@@ -139,14 +145,14 @@ class ApiClient {
       try {
         json = JSON.parse(text);
       } catch {
-        json = { error: { message: text || res.statusText } };
+        json = { data: null as T, error: { message: text || res.statusText } };
       }
     }
 
     if (!res.ok) {
       const message = json?.error?.message || `Request failed with status ${res.status}`;
       const code = json?.error?.code || 'ERROR';
-      const error = new Error(message) as Error & { code?: string; details?: any };
+      const error = new Error(message) as Error & { code?: string; details?: unknown };
       error.code = code;
       error.details = json?.error?.details;
       throw error;
@@ -157,7 +163,7 @@ class ApiClient {
 
   // --- Health Checks ---
   async checkHealth(): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE_URL}/health`);
+    const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('Health check failed');
     return res.json();
   }
@@ -178,19 +184,21 @@ class ApiClient {
   }
 
   async register(input: { email: string; password: string; display_name: string }) {
-    return this.request<{
-      user: any;
+    const res = await this.request<{
+      user: AuthSession['user'];
       session: AuthSession | null;
       requires_email_confirmation: boolean;
     }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(input),
     });
+    if (res.data?.session) this.setSession(res.data.session);
+    return res;
   }
 
   async login(input: { email: string; password: string; display_name?: string }) {
     const res = await this.request<{
-      user: any;
+      user: AuthSession['user'];
       session: AuthSession | null;
       auto_created?: boolean;
       requires_email_confirmation?: boolean;
@@ -209,7 +217,7 @@ class ApiClient {
 
   async refresh(refreshToken: string) {
     const res = await this.request<{
-      user: any;
+      user: AuthSession['user'];
       session: AuthSession;
     }>('/api/auth/refresh', {
       method: 'POST',
@@ -237,7 +245,7 @@ class ApiClient {
 
   async getMe() {
     return this.request<{
-      user: any;
+      user: AuthSession['user'];
       profile: Profile;
     }>('/api/auth/me');
   }
@@ -300,14 +308,14 @@ class ApiClient {
   }
 
   async addGroupMember(id: string, userId: string) {
-    return this.request<any>(`/api/conversations/${id}/members`, {
+    return this.request<unknown>(`/api/conversations/${id}/members`, {
       method: 'POST',
       body: JSON.stringify({ user_id: userId }),
     });
   }
 
   async removeGroupMember(id: string, userId: string) {
-    return this.request<any>(`/api/conversations/${id}/members/${userId}`, {
+    return this.request<unknown>(`/api/conversations/${id}/members/${userId}`, {
       method: 'DELETE',
     });
   }
@@ -377,14 +385,14 @@ class ApiClient {
   }
 
   async addReaction(messageId: string, emoji: string) {
-    return this.request<any>(`/api/messages/${messageId}/reactions`, {
+    return this.request<unknown>(`/api/messages/${messageId}/reactions`, {
       method: 'POST',
       body: JSON.stringify({ emoji }),
     });
   }
 
   async removeReaction(messageId: string, emoji: string) {
-    return this.request<any>(`/api/messages/${messageId}/reactions`, {
+    return this.request<unknown>(`/api/messages/${messageId}/reactions`, {
       method: 'DELETE',
       body: JSON.stringify({ emoji }),
     });
@@ -410,6 +418,142 @@ class ApiClient {
     return this.request<void>(`/api/attachments/${attachmentId}`, {
       method: 'DELETE',
     });
+  }
+
+  // --- Campus Scoped Rooms API ---
+  async getCampusRooms(category?: string, campus?: string) {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (campus) params.set('campus', campus);
+    return this.request<CampusRoom[]>(`/api/campus/rooms?${params.toString()}`);
+  }
+
+  async getCampusRoom(slug: string) {
+    return this.request<CampusRoom>(`/api/campus/rooms/${slug}`);
+  }
+
+  async joinCampusRoomConversation(slug: string) {
+    return this.request<{ conversation: Conversation; room: CampusRoom; isAdmin?: boolean }>(
+      `/api/campus/rooms/${slug}/conversation`,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async getCampusRoomPermissions(slug: string) {
+    return this.request<{
+      roomSlug: string;
+      isAdmin: boolean;
+      canBookEvents: boolean;
+      canResolveTickets: boolean;
+      canBroadcastMoodle: boolean;
+      canUpdateMenu: boolean;
+    }>(`/api/campus/rooms/${slug}/permissions`);
+  }
+
+  // --- Gymkhana Events API ---
+  async getCampusEvents(venue?: string, category?: string) {
+    const params = new URLSearchParams();
+    if (venue) params.set('venue', venue);
+    if (category) params.set('category', category);
+    return this.request<CampusEvent[]>(`/api/campus/events?${params.toString()}`);
+  }
+
+  async createCampusEvent(input: {
+    title: string;
+    description?: string;
+    category: string;
+    organizer: string;
+    venue: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+  }) {
+    return this.request<CampusEvent>('/api/campus/events', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updateCampusEventStatus(id: string, status: string) {
+    return this.request<CampusEvent>(`/api/campus/events/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // --- Hostels & Messes Tickets API ---
+  async getCampusTickets(options: {
+    scope?: string;
+    campus?: string;
+    status?: string;
+    cluster?: string;
+  } = {}) {
+    const params = new URLSearchParams();
+    if (options.scope) params.set('scope', options.scope);
+    if (options.campus) params.set('campus', options.campus);
+    if (options.status) params.set('status', options.status);
+    if (options.cluster) params.set('cluster', options.cluster);
+    return this.request<CampusTicket[]>(`/api/campus/tickets?${params.toString()}`);
+  }
+
+  async createCampusTicket(input: {
+    title: string;
+    description?: string;
+    scope: 'hostel' | 'mess';
+    category: string;
+    campus: 'North' | 'South';
+    clusterOrMess: string;
+    specificLocation: string;
+  }) {
+    return this.request<CampusTicket>('/api/campus/tickets', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async upvoteCampusTicket(id: string) {
+    return this.request<{ ticket: CampusTicket; hasUpvoted: boolean }>(
+      `/api/campus/tickets/${id}/upvote`,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async updateCampusTicketStatus(id: string, status: string) {
+    return this.request<CampusTicket>(`/api/campus/tickets/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // --- Moodle Integration API ---
+  async getMoodleData(courseCode: string) {
+    return this.request<{
+      courseCode: string;
+      moodleHost: string;
+      lastSynced: string;
+      assignments: MoodleAssignment[];
+    }>(`/api/campus/moodle/${courseCode}`);
+  }
+
+  async syncMoodle(courseCode: string) {
+    return this.request<{
+      success: boolean;
+      courseCode: string;
+      alert: MoodleAssignment;
+      syncedAt: string;
+    }>('/api/campus/moodle/sync', {
+      method: 'POST',
+      body: JSON.stringify({ courseCode }),
+    });
+  }
+
+  // --- Mess Menus API ---
+  async getMessMenu(messSlug: string) {
+    return this.request<MessDayMenu>(`/api/campus/messes/${messSlug}/menu`);
   }
 }
 

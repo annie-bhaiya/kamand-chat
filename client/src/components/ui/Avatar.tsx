@@ -54,7 +54,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#ffffff',
+          color: 'var(--text-primary)',
           fontWeight: 700,
           fontSize: font,
           letterSpacing: '-0.02em',

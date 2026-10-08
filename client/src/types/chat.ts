@@ -111,3 +111,72 @@ export interface ConversationReadEvent {
   user_id: string;
   last_read_seq: number;
 }
+
+export interface CampusRoom {
+  id: string;
+  slug: string;
+  name: string;
+  category: 'clubs' | 'courses' | 'hostels' | 'branches' | 'messes';
+  subcategory: string;
+  campus?: 'North' | 'South' | 'Both';
+  description: string;
+  tags: string[];
+  courseCode?: string;
+  hostelCluster?: string;
+  hostelBlock?: string;
+}
+
+export interface CampusEvent {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Club Workshop' | 'Fest Event' | 'Sports Tournament' | 'Placement & Tech Talk' | 'General';
+  organizer: string;
+  venue: 'Auditorium A1/A2' | 'A13 Hall' | 'South Campus Grounds' | 'SCEE Seminar Hall' | 'Sports Complex' | 'Other';
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: 'pending' | 'approved' | 'conflict' | 'completed';
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface CampusTicket {
+  id: string;
+  title: string;
+  description: string;
+  scope: 'hostel' | 'mess';
+  category: string;
+  campus: 'North' | 'South';
+  clusterOrMess: string;
+  specificLocation: string;
+  status: 'Reported' | 'Under Investigation' | 'Resolved by Warden/Caretaker';
+  upvotes: number;
+  upvotedBy: string[];
+  createdBy: string;
+  creatorName: string;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+export interface MoodleAssignment {
+  id: string;
+  courseCode: string;
+  title: string;
+  description: string;
+  type: 'assignment' | 'quiz' | 'lab' | 'grade' | 'announcement';
+  dueDate: string;
+  weightage?: string;
+  moodleUrl: string;
+  status: 'pending' | 'submitted' | 'graded';
+}
+
+export interface MessDayMenu {
+  messName: string;
+  day: string;
+  breakfast: string;
+  lunch: string;
+  snacks: string;
+  dinner: string;
+  specialNotice?: string;
+}

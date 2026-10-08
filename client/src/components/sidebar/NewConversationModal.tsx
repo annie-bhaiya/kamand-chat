@@ -43,21 +43,22 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    let active = true;
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
         const res = await api.searchUsers(searchQuery.trim());
-        if (res.data) {
+        if (active && res.data) {
           setSearchResults(res.data);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to search users:', err);
       } finally {
-        setIsSearching(false);
+        if (active) setIsSearching(false);
       }
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => { active = false; clearTimeout(timer); };
   }, [searchQuery, isOpen]);
 
   // Also query campus directory to give hints
@@ -71,8 +72,8 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
       await createDirectChat(user.id);
       success(`Chat started with ${user.display_name || user.username}`);
       onClose();
-    } catch (err: any) {
-      error(err.message || 'Failed to start direct chat');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to start direct chat');
     } finally {
       setIsCreating(false);
     }
@@ -101,8 +102,8 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
       setGroupTitle('');
       setSelectedMemberIds([]);
       onClose();
-    } catch (err: any) {
-      error(err.message || 'Failed to create group');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to create group');
     } finally {
       setIsCreating(false);
     }
@@ -136,10 +137,10 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
               padding: '8px',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '13px',
+              fontSize: '0.867rem',
               fontWeight: 600,
               cursor: 'pointer',
-              background: activeTab === 'direct' ? 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)' : 'transparent',
+              background: activeTab === 'direct' ? 'var(--accent)' : 'transparent',
               color: activeTab === 'direct' ? '#ffffff' : 'var(--text-secondary)',
               transition: 'all var(--transition-fast)',
             }}
@@ -154,10 +155,10 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
               padding: '8px',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '13px',
+              fontSize: '0.867rem',
               fontWeight: 600,
               cursor: 'pointer',
-              background: activeTab === 'group' ? 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)' : 'transparent',
+              background: activeTab === 'group' ? 'var(--accent)' : 'transparent',
               color: activeTab === 'group' ? '#ffffff' : 'var(--text-secondary)',
               transition: 'all var(--transition-fast)',
             }}
@@ -229,7 +230,7 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
               {/* Show directory hints if matching directory but not yet signed in */}
               {directoryMatches.length > 0 && (
                 <div style={{ marginTop: '10px', width: '100%', textAlign: 'left' }}>
-                  <div style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 700, marginBottom: '6px' }}>
                     Matching Campus Directory Records:
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -239,14 +240,14 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
                         style={{
                           padding: '6px 10px',
                           borderRadius: 'var(--radius-sm)',
-                          background: 'rgba(2, 132, 199, 0.08)',
-                          fontSize: '12px',
+                          background: 'var(--accent-light)',
+                          fontSize: '0.8rem',
                           display: 'flex',
                           justifyContent: 'space-between',
                         }}
                       >
                         <span style={{ fontWeight: 600, color: '#f8fafc' }}>{d.name}</span>
-                        <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{d.id}</span>
+                        <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{d.id}</span>
                       </div>
                     ))}
                   </div>
@@ -274,8 +275,8 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
                     justifyContent: 'space-between',
                     padding: '8px 12px',
                     borderRadius: 'var(--radius-md)',
-                    background: isSelected ? 'rgba(99, 102, 241, 0.16)' : 'rgba(255, 255, 255, 0.03)',
-                    border: `1px solid ${isSelected ? 'rgba(99, 102, 241, 0.4)' : 'var(--border-subtle)'}`,
+                    background: isSelected ? 'var(--accent-light)' : 'var(--border-subtle)',
+                    border: `1px solid ${isSelected ? 'var(--accent-light)' : 'var(--border-subtle)'}`,
                     cursor: 'pointer',
                     transition: 'all var(--transition-fast)',
                   }}
@@ -283,10 +284,10 @@ export const NewConversationModal: React.FC<NewConversationModalProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <Avatar name={user.display_name || user.username} src={user.avatar_key} size="sm" />
                     <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {user.display_name}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontFamily: 'monospace' }}>
                         {rollTag}
                       </div>
                     </div>

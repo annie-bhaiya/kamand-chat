@@ -68,6 +68,27 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {isDirect ? (
         <Avatar name={avatarName} src={avatarKey} size="md" />
+      ) : displayName.startsWith('#') ? (
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            minWidth: 40,
+            borderRadius: '12px',
+            background: 'var(--accent)',
+            border: '1px solid var(--accent-light)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#c084fc',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+            fontWeight: 'bold',
+            fontSize: '1.067rem',
+            fontFamily: 'monospace',
+          }}
+        >
+          #
+        </div>
       ) : (
         <div
           style={{
@@ -75,11 +96,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             height: 40,
             minWidth: 40,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+            background: 'var(--accent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ffffff',
+            color: 'var(--text-primary)',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
           }}
         >
@@ -94,7 +115,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             {subtitleHandle && (
               <span
                 style={{
-                  fontSize: '10.5px',
+                  fontSize: '0.8rem',
                   color: 'var(--text-muted)',
                   fontFamily: 'monospace',
                   letterSpacing: '0.02em',

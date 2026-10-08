@@ -3,7 +3,7 @@ import { api } from './api';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-type Listener = (...args: any[]) => void;
+type Listener = (payload: unknown) => void;
 
 class SocketManager {
   private socket: Socket | null = null;
@@ -13,7 +13,7 @@ class SocketManager {
 
   connect(token: string) {
     if (this.socket && this.socket.connected) {
-      if ((this.socket.auth as any)?.token === token) {
+      if ((this.socket.auth as { token?: string })?.token === token) {
         return;
       }
       this.disconnect();
@@ -60,7 +60,7 @@ class SocketManager {
     ];
 
     for (const eventName of serverEvents) {
-      this.socket.on(eventName, (payload: any) => {
+      this.socket.on(eventName, (payload: unknown) => {
         if (eventName === 'session:expired') {
           // Token expired, attempt refresh
           api.refreshTokenIfNeeded().then((newToken) => {
@@ -91,12 +91,13 @@ class SocketManager {
     }
   }
 
-  on(event: string, listener: Listener) {
+  on<T>(event: string, listener: (payload: T) => void) {
+    const wrapped: Listener = payload => listener(payload as T);
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(listener);
-    return () => this.off(event, listener);
+    this.listeners.get(event)!.add(wrapped);
+    return () => this.off(event, wrapped);
   }
 
   off(event: string, listener: Listener) {
@@ -106,12 +107,12 @@ class SocketManager {
     }
   }
 
-  private dispatch(event: string, ...args: any[]) {
+  private dispatch(event: string, payload: unknown) {
     const set = this.listeners.get(event);
     if (set) {
       for (const listener of set) {
         try {
-          listener(...args);
+          listener(payload);
         } catch (err) {
           console.error(`Error in socket event listener [${event}]:`, err);
         }

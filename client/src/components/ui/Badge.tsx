@@ -10,9 +10,9 @@ interface BadgeProps {
 
 const VARIANTS = {
   primary: {
-    bg: 'rgba(99, 102, 241, 0.18)',
-    color: '#a5b4fc',
-    border: '1px solid rgba(99, 102, 241, 0.35)',
+    bg: 'var(--accent-light)',
+    color: 'var(--accent)',
+    border: '1px solid var(--accent-light)',
   },
   success: {
     bg: 'rgba(16, 185, 129, 0.18)',
@@ -30,7 +30,7 @@ const VARIANTS = {
     border: '1px solid rgba(244, 63, 94, 0.35)',
   },
   neutral: {
-    bg: 'rgba(255, 255, 255, 0.08)',
+    bg: 'var(--border-subtle)',
     color: '#94a3b8',
     border: '1px solid rgba(255, 255, 255, 0.12)',
   },

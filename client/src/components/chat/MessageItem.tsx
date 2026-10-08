@@ -73,7 +73,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       if (res.data?.signedUrl) {
         setSignedUrls((prev) => ({ ...prev, [attachment.id]: res.data.signedUrl }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to get attachment URL:', err);
     } finally {
       setLoadingUrls((prev) => ({ ...prev, [attachment.id]: false }));
@@ -81,14 +81,16 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   };
 
   useEffect(() => {
-    if (message.attachments && message.attachments.length > 0 && !isDeleted) {
-      for (const att of message.attachments) {
-        // Pre-fetch for images and audio
-        if (att.mime_type.startsWith('image/') || att.mime_type.startsWith('audio/')) {
-          fetchAttachmentUrl(att);
-        }
+    let active = true;
+    if (!isDeleted) {
+      for (const attachment of message.attachments || []) {
+        if (!/^(image|audio)\//.test(attachment.mime_type)) continue;
+        api.getAttachmentUrl(attachment.id).then(res => {
+          if (active && res.data?.signedUrl) setSignedUrls(previous => ({ ...previous, [attachment.id]: res.data.signedUrl }));
+        }).catch(() => {});
       }
     }
+    return () => { active = false; };
   }, [message.attachments, isDeleted]);
 
   // Aggregate reactions: emoji -> { count, hasReacted }
@@ -117,8 +119,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     try {
       await onEditMessage(message.id, editBody.trim());
       setIsEditing(false);
-    } catch (err: any) {
-      error(err.message || 'Failed to edit message');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to edit message');
     } finally {
       setIsSavingEdit(false);
     }
@@ -128,8 +130,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     if (confirm('Are you sure you want to delete this message?')) {
       try {
         await onDeleteMessage(message.id);
-      } catch (err: any) {
-        error(err.message || 'Failed to delete message');
+      } catch (err: unknown) {
+        error((err instanceof Error ? err.message : '') || 'Failed to delete message');
       }
     }
   };
@@ -170,7 +172,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                 <button
                   onClick={() => setIsEditing(false)}
                   className="btn btn-ghost"
-                  style={{ padding: '4px 8px', fontSize: '11px' }}
+                  style={{ padding: '4px 8px', fontSize: '0.8rem' }}
                 >
                   <X size={12} />
                   Cancel
@@ -179,7 +181,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                   onClick={handleSaveEdit}
                   disabled={isSavingEdit}
                   className="btn btn-primary"
-                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                  style={{ padding: '4px 10px', fontSize: '0.8rem' }}
                 >
                   <Save size={12} />
                   {isSavingEdit ? 'Saving...' : 'Save'}
@@ -217,7 +219,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                               onClick={() => fetchAttachmentUrl(att)}
                               className="attachment-card"
                             >
-                              <FileText size={18} color="#818cf8" />
+                              <FileText size={18} color="var(--accent)" />
                               <span>{att.original_name} (Click to load image)</span>
                             </div>
                           )}
@@ -245,12 +247,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                         }}
                         className="attachment-card"
                       >
-                        <FileText size={18} color="#818cf8" style={{ flexShrink: 0 }} />
+                        <FileText size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '12.5px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: '0.833rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {att.original_name}
                           </div>
-                          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                             {formatFileSize(att.size_bytes)}
                           </div>
                         </div>
@@ -272,7 +274,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             {isMe && !isDeleted && (
               <span title={isReadByOthers ? 'Read' : 'Sent'}>
                 {isReadByOthers ? (
-                  <CheckCheck size={13} color="#38bdf8" />
+                  <CheckCheck size={13} color="var(--accent)" />
                 ) : (
                   <Check size={13} color="rgba(255,255,255,0.7)" />
                 )}

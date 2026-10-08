@@ -1,3 +1,4 @@
+import type { Conversation, ConversationMember, Profile } from '@/types/chat';
 // Utility functions for UI formatting, avatars, and animations
 
 export function formatTime(isoString: string): string {
@@ -73,16 +74,7 @@ export function getInitials(name?: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const GRADIENTS = [
-  'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-  'linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)',
-  'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-  'linear-gradient(135deg, #f97316 0%, #eab308 100%)',
-  'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-  'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-  'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-  'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
-];
+const GRADIENTS = ['#456755', '#486d78', '#876451', '#68684b', '#665e7c', '#4e7069'];
 
 export function getAvatarGradient(identifier: string): string {
   let hash = 0;
@@ -109,24 +101,22 @@ export function generateUUID(): string {
   });
 }
 
-export function getMemberProfile(member?: any): { id: string; username: string; display_name: string; avatar_key: string | null } | null {
+export function getMemberProfile(member?: ConversationMember | null): { id: string; username: string; display_name: string; avatar_key: string | null } | null {
   if (!member) return null;
   if (member.profiles) {
     return Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
   }
-  if (member.profile) {
-    return Array.isArray(member.profile) ? member.profile[0] : member.profile;
-  }
+
   return null;
 }
 
-export function getConversationMembers(conv?: any): any[] {
+export function getConversationMembers(conv?: Conversation | null): ConversationMember[] {
   if (!conv) return [];
-  return conv.conversation_members || conv.members || [];
+  return conv.conversation_members || [];
 }
 
-export function getOtherMember(conv?: any, currentUserId?: string): any | null {
+export function getOtherMember(conv?: Conversation | null, currentUserId?: string): ConversationMember | null {
   const members = getConversationMembers(conv);
-  return members.find((m: any) => m.user_id !== currentUserId) || null;
+  return members.find((m) => m.user_id !== currentUserId) || null;
 }
 

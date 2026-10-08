@@ -15,7 +15,7 @@ import {
 
 interface MessageComposerProps {
   conversationId: string;
-  onSendMessage: (body: string, attachmentIds?: string[]) => Promise<any>;
+  onSendMessage: (body: string, attachmentIds?: string[]) => Promise<unknown>;
   onSendTyping: (isTyping: boolean) => void;
 }
 
@@ -36,6 +36,10 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => () => {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+  }, []);
 
   // Resize textarea automatically
   useEffect(() => {
@@ -61,7 +65,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
@@ -83,8 +87,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       if (res.data) {
         setDraftAttachments((prev) => [...prev, res.data]);
       }
-    } catch (err: any) {
-      error(err.message || 'File upload failed');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'File upload failed');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -104,7 +108,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed && draftAttachments.length === 0) return;
-    if (isSending) return;
+    if (isSending || isUploading) return;
 
     setIsSending(true);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -119,8 +123,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
-    } catch (err: any) {
-      error(err.message || 'Failed to send message');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to send message');
     } finally {
       setIsSending(false);
     }
@@ -197,6 +201,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
         {/* Text input */}
         <textarea
+          aria-label="Message"
           ref={textareaRef}
           value={text}
           onChange={handleTextChange}

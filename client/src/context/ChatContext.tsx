@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useCallback,
   useRef,
+  useEffectEvent,
 } from 'react';
 import { api } from '@/lib/api';
 import { socketManager } from '@/lib/socket';
@@ -64,9 +65,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [typingMap, setTypingMap] = useState<Record<string, Record<string, NodeJS.Timeout>>>({});
 
   const activeConvRef = useRef<string | null>(null);
-  activeConvRef.current = activeConversationId;
+  useEffect(() => { activeConvRef.current = activeConversationId; }, [activeConversationId]);
 
   const currentUserId = user?.id;
+  const pagingRef = useRef(false);
 
   // Load conversations
   const loadConversations = useCallback(async () => {
@@ -84,7 +86,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
+  const syncAuthentication = useEffectEvent(() => {
     if (isAuthenticated) {
       loadConversations();
     } else {
@@ -92,7 +94,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveConversationId(null);
       setMessagesByConv({});
     }
-  }, [isAuthenticated, loadConversations]);
+  });
+  // Authentication changes must clear private conversation state on logout.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { syncAuthentication(); }, [isAuthenticated, loadConversations]);
 
   // Load messages for a conversation
   const loadMessagesForConversation = useCallback(
@@ -129,13 +134,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load older messages (pagination)
   const loadMoreMessages = useCallback(async () => {
-    if (!activeConversationId) return;
+    if (!activeConversationId || pagingRef.current) return;
     const currentList = messagesByConv[activeConversationId] || [];
     if (currentList.length === 0) return;
 
     const oldestSeq = currentList[0].seq;
     if (oldestSeq <= 1) return;
 
+    pagingRef.current = true;
+    setIsLoadingMessages(true);
     try {
       const res = await api.getMessages(activeConversationId, {
         before_seq: oldestSeq,
@@ -145,7 +152,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const sortedOlder = [...res.data].sort((a, b) => a.seq - b.seq);
         setMessagesByConv((prev) => ({
           ...prev,
-          [activeConversationId]: [...sortedOlder, ...(prev[activeConversationId] || [])],
+          [activeConversationId]: [...new Map([...sortedOlder, ...(prev[activeConversationId] || [])].map(message => [message.id, message])).values()].sort((a, b) => a.seq - b.seq),
         }));
         setHasMoreByConv((prev) => ({
           ...prev,
@@ -159,14 +166,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Failed to load older messages:', err);
-    }
+    } finally { pagingRef.current = false; setIsLoadingMessages(false); }
   }, [activeConversationId, messagesByConv]);
 
   // Select a conversation
   const selectConversation = useCallback(
     async (id: string | null) => {
+      activeConvRef.current = id;
       setActiveConversationId(id);
       if (id) {
+        // If not in state, fetch immediately and ensure activeConversation is never null
+        const convExists = conversations.some((c) => c.id === id);
+        if (!convExists) {
+          try {
+            const res = await api.getConversation(id);
+            if (res.data) {
+              setConversations((prev) => (prev.some((c) => c.id === id) ? prev : [res.data, ...prev]));
+            }
+          } catch (e) {
+            console.error('Failed to load conversation details:', e);
+          }
+        }
+
         if (!messagesByConv[id]) {
           await loadMessagesForConversation(id);
         } else {
@@ -179,7 +200,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     },
-    [messagesByConv, loadMessagesForConversation]
+    [conversations, messagesByConv, loadMessagesForConversation]
   );
 
   // Handle Socket Events
@@ -190,7 +211,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Connection status
     unsubs.push(
-      socketManager.on('connection:status', (info: any) => {
+      socketManager.on('connection:status', (info: { status?: 'connected' | 'connecting' | 'disconnected' | 'error'; connected?: boolean }) => {
         setConnectionStatus(info.status || (info.connected ? 'connected' : 'disconnected'));
         if (info.connected) {
           // Catch up latest conversations
@@ -318,7 +339,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         api.getConversation(conversation_id)
           .then((res) => {
             if (res.data) {
-              const members = res.data.conversation_members || (res.data as any).members || [];
+              const members = res.data.conversation_members || [];
               const convData = { ...res.data, conversation_members: members };
               setConversations((prev) => {
                 const index = prev.findIndex((c) => c.id === conversation_id);

@@ -18,7 +18,9 @@ import {
   LogOut,
   Crown,
   Search,
+  ShieldCheck,
 } from 'lucide-react';
+import { ALL_CAMPUS_ROOMS, isCampusRoomAdmin } from '@/lib/campus-rooms';
 
 interface GroupInfoDrawerProps {
   isOpen: boolean;
@@ -35,11 +37,11 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
     addMemberToGroup,
     leaveOrRemoveMember,
   } = useChat();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { success, error } = useToast();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
+  const [newTitle, setNewTitle] = useState(activeConversation?.title || '');
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   // Add member search state
@@ -47,21 +49,18 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
   const [candidateUsers, setCandidateUsers] = useState<Profile[]>([]);
   const [isSearchingCandidates, setIsSearchingCandidates] = useState(false);
 
-  useEffect(() => {
-    if (activeConversation) {
-      setNewTitle(activeConversation.title || '');
-    }
-  }, [activeConversation, isOpen]);
+
 
   // Search candidate users to add
   useEffect(() => {
     if (!isAddingMember) return;
 
+    let active = true;
     const timer = setTimeout(async () => {
       setIsSearchingCandidates(true);
       try {
         const res = await api.searchUsers(memberSearchQuery);
-        if (res.data) {
+        if (active && res.data) {
           // Filter out users already in active members
           const existingIds = new Set(
             activeConversation?.conversation_members
@@ -70,14 +69,14 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
           );
           setCandidateUsers(res.data.filter((u) => !existingIds.has(u.id)));
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Candidate search failed:', err);
       } finally {
-        setIsSearchingCandidates(false);
+        if (active) setIsSearchingCandidates(false);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => { active = false; clearTimeout(timer); };
   }, [memberSearchQuery, isAddingMember, activeConversation]);
 
   if (!activeConversation) return null;
@@ -86,6 +85,22 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
     (m) => m.user_id === user?.id
   );
   const isOwner = currentMember?.role === 'owner';
+
+  // Identify campus room
+  const normalizedTitle = (activeConversation.title || '').replace(/^#/, '').toLowerCase().trim();
+  const campusRoom = ALL_CAMPUS_ROOMS.find(
+    (r) =>
+      r.name.toLowerCase() === normalizedTitle ||
+      r.slug.toLowerCase() === normalizedTitle ||
+      (r.courseCode && normalizedTitle.includes(r.courseCode.toLowerCase()))
+  );
+
+  const isCampusAdmin = campusRoom
+    ? isCampusRoomAdmin(campusRoom.slug, user) ||
+      isCampusRoomAdmin(campusRoom.slug, profile?.username)
+    : false;
+  const isPrivileged = Boolean(isOwner || isCampusAdmin);
+
   const activeMembers =
     activeConversation.conversation_members?.filter((m) => !m.left_at) || [];
 
@@ -98,8 +113,8 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
       await renameGroup(newTitle.trim());
       setIsEditingTitle(false);
       success('Group renamed');
-    } catch (err: any) {
-      error(err.message || 'Failed to rename group');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to rename group');
     }
   };
 
@@ -109,8 +124,8 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
       success('Member added to group');
       setIsAddingMember(false);
       setMemberSearchQuery('');
-    } catch (err: any) {
-      error(err.message || 'Failed to add member');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to add member');
     }
   };
 
@@ -127,8 +142,8 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
         if (isSelf) {
           onClose();
         }
-      } catch (err: any) {
-        error(err.message || 'Action failed');
+      } catch (err: unknown) {
+        error((err instanceof Error ? err.message : '') || 'Action failed');
       }
     }
   };
@@ -177,15 +192,15 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
           ) : (
             <>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700 }}>
+                <h3 style={{ fontSize: '1.067rem', fontWeight: 700 }}>
                   {activeConversation.title || 'Group Chat'}
                 </h3>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   Created on{' '}
                   {new Date(activeConversation.created_at).toLocaleDateString()}
                 </span>
               </div>
-              {isOwner && (
+              {isPrivileged && (
                 <button
                   type="button"
                   onClick={() => setIsEditingTitle(true)}
@@ -199,8 +214,8 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
           )}
         </div>
 
-        {/* Member Action: Add Member button (Owner only) */}
-        {isOwner && (
+        {/* Member Action: Add Member button (Owner/Admin) */}
+        {isPrivileged && (
           <div style={{ marginBottom: '16px' }}>
             {!isAddingMember ? (
               <button
@@ -216,18 +231,18 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
               <div
                 style={{
                   padding: '12px',
-                  background: 'rgba(99, 102, 241, 0.08)',
+                  background: 'var(--accent-light)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(99, 102, 241, 0.25)',
+                  border: '1px solid var(--accent-light)',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#a5b4fc' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)' }}>
                     Find user to add:
                   </span>
                   <button
                     onClick={() => setIsAddingMember(false)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px' }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Cancel
                   </button>
@@ -247,11 +262,11 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
 
                 <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {isSearchingCandidates ? (
-                    <div style={{ fontSize: '12px', textAlign: 'center', padding: '12px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.8rem', textAlign: 'center', padding: '12px', color: 'var(--text-muted)' }}>
                       Searching...
                     </div>
                   ) : candidateUsers.length === 0 ? (
-                    <div style={{ fontSize: '12px', textAlign: 'center', padding: '12px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.8rem', textAlign: 'center', padding: '12px', color: 'var(--text-muted)' }}>
                       No available users found.
                     </div>
                   ) : (
@@ -265,15 +280,15 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                           justifyContent: 'space-between',
                           padding: '6px 10px',
                           borderRadius: 'var(--radius-sm)',
-                          background: 'rgba(255, 255, 255, 0.04)',
+                          background: 'var(--border-subtle)',
                           cursor: 'pointer',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Avatar name={u.display_name} src={u.avatar_key} size="xs" />
-                          <span style={{ fontSize: '12.5px' }}>{u.display_name} (@{u.username})</span>
+                          <span style={{ fontSize: '0.833rem' }}>{u.display_name} (@{u.username})</span>
                         </div>
-                        <UserPlus size={14} color="#818cf8" />
+                        <UserPlus size={14} color="var(--accent)" />
                       </div>
                     ))
                   )}
@@ -287,7 +302,7 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
         <div style={{ marginBottom: '20px' }}>
           <h4
             style={{
-              fontSize: '12px',
+              fontSize: '0.8rem',
               fontWeight: 600,
               color: 'var(--text-secondary)',
               textTransform: 'uppercase',
@@ -313,20 +328,20 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                     justifyContent: 'space-between',
                     padding: '8px 12px',
                     borderRadius: 'var(--radius-md)',
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: 'var(--border-subtle)',
                     border: '1px solid var(--border-subtle)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <Avatar name={name} src={m.profiles?.avatar_key} size="sm" />
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ fontSize: '0.867rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>{name}</span>
                         {isCurrentUser && (
-                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>(You)</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>(You)</span>
                         )}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         @{m.profiles?.username}
                       </div>
                     </div>
@@ -338,12 +353,17 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                         <Crown size={11} style={{ marginRight: '3px' }} />
                         Owner
                       </Badge>
+                    ) : campusRoom && isCampusRoomAdmin(campusRoom.slug, m.profiles?.username) ? (
+                      <Badge variant="primary" size="sm">
+                        <ShieldCheck size={11} style={{ marginRight: '3px' }} />
+                        Admin
+                      </Badge>
                     ) : (
                       <Badge variant="neutral" size="sm">Member</Badge>
                     )}
 
-                    {/* Owner can remove non-owners */}
-                    {isOwner && !isMemberOwner && (
+                    {/* Owner/Admin can remove non-owners */}
+                    {isPrivileged && !isMemberOwner && !isCurrentUser && (
                       <button
                         onClick={() => handleRemoveMember(m.user_id, name)}
                         className="action-btn-mini"

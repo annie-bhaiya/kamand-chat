@@ -95,7 +95,7 @@ export const MessageList: React.FC<MessageListProps> = ({
             onClick={onLoadMore}
             disabled={isLoadingMore}
             className="btn btn-secondary"
-            style={{ fontSize: '12px', padding: '6px 14px', borderRadius: 'var(--radius-full)' }}
+            style={{ fontSize: '0.8rem', padding: '6px 14px', borderRadius: 'var(--radius-full)' }}
           >
             {isLoadingMore ? 'Loading older messages...' : 'Load older messages'}
           </button>
@@ -110,7 +110,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           </div>
           <h3 className="empty-state-title">No messages yet</h3>
           <p className="empty-state-desc">
-            Send a message to start this conversation. All messages are encrypted and synchronized in real-time.
+            Send a message to start this conversation. New messages appear here in real time.
           </p>
         </div>
       ) : (

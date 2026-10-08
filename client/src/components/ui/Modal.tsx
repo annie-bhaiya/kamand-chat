@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -22,18 +22,42 @@ export const Modal: React.FC<ModalProps> = ({
   footer,
   maxWidth = 480,
 }) => {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
   useEffect(() => {
     if (!isOpen) return;
-
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]'
+    ) || []).filter(element => element.getClientRects().length > 0);
+    (focusable()[0] || dialog)?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        e.preventDefault();
+        closeRef.current();
+      }
+      if (e.key === 'Tab') {
+        const items = focusable();
+        const first = items[0];
+        const last = items.at(-1);
+        if (!first) { e.preventDefault(); dialog?.focus(); }
+        else if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          e.preventDefault(); last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -47,20 +71,22 @@ export const Modal: React.FC<ModalProps> = ({
       }}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       <div
         className="modal-content"
+        ref={dialogRef}
+        tabIndex={-1}
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
           <div>
-            <h3 id="modal-title" className="modal-title">
+            <h3 id={titleId} className="modal-title">
               {title}
             </h3>
             {description && (
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                 {description}
               </p>
             )}

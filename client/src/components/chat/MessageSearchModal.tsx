@@ -23,28 +23,29 @@ export const MessageSearchModal: React.FC<MessageSearchModalProps> = ({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Message[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   useEffect(() => {
     if (!isOpen || !query.trim()) {
-      setResults([]);
       return;
     }
 
+    let active = true;
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
         const res = await api.searchMessages(conversationId, query.trim());
-        if (res.data) {
+        if (active && res.data) {
           setResults(res.data);
         }
-      } catch (err: any) {
-        console.error('Search failed:', err);
+      } catch (err: unknown) {
+        if (active) setSearchError(err instanceof Error ? err.message : 'Search failed. Try again.');
       } finally {
-        setIsSearching(false);
+        if (active) setIsSearching(false);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => { active = false; clearTimeout(timer); };
   }, [query, isOpen, conversationId]);
 
   return (
@@ -63,7 +64,8 @@ export const MessageSearchModal: React.FC<MessageSearchModalProps> = ({
             placeholder="Type words to search..."
             className="search-input"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search messages"
+            onChange={(e) => { setQuery(e.target.value); setResults([]); setSearchError(''); setIsSearching(!!e.target.value.trim()); }}
             autoFocus
           />
         </div>
@@ -75,7 +77,7 @@ export const MessageSearchModal: React.FC<MessageSearchModalProps> = ({
             </div>
           ) : results.length === 0 ? (
             <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              {query ? 'No matching messages found.' : 'Enter search terms above.'}
+              {searchError || (query ? 'No matching messages found.' : 'Enter search terms above.')}
             </div>
           ) : (
             results.map((msg) => {
@@ -91,7 +93,7 @@ export const MessageSearchModal: React.FC<MessageSearchModalProps> = ({
                   style={{
                     padding: '10px 14px',
                     borderRadius: 'var(--radius-md)',
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: 'var(--border-subtle)',
                     border: '1px solid var(--border-subtle)',
                     display: 'flex',
                     flexDirection: 'column',
@@ -99,14 +101,14 @@ export const MessageSearchModal: React.FC<MessageSearchModalProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#818cf8' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent)' }}>
                       {senderName}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {formatDateDivider(msg.created_at)} at {formatTime(msg.created_at)}
                     </span>
                   </div>
-                  <div style={{ fontSize: '13.5px', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
                     {msg.body}
                   </div>
                 </div>

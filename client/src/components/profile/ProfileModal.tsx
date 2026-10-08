@@ -17,16 +17,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const { user, profile, updateProfile, logout } = useAuth();
   const { success, error } = useToast();
 
-  const [displayName, setDisplayName] = useState('');
-  const [avatarKey, setAvatarKey] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [avatarKey, setAvatarKey] = useState<string | null>(profile?.avatar_key || null);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.display_name || '');
-      setAvatarKey(profile.avatar_key || null);
-    }
-  }, [profile, isOpen]);
+
 
   const parsed = parseRollNumber(profile?.username || '');
 
@@ -45,8 +40,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       });
       success('Campus profile updated!');
       onClose();
-    } catch (err: any) {
-      error(err.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      error((err instanceof Error ? err.message : '') || 'Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -56,7 +51,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     try {
       await logout();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       error('Logout failed');
     }
   };
@@ -86,7 +81,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         >
           <Avatar name={displayName || profile?.username} src={avatarKey} size="xl" />
           <div style={{ textAlign: 'center' }}>
-            <h4 style={{ fontSize: '17px', fontWeight: 700 }}>
+            <h4 style={{ fontSize: '1.133rem', fontWeight: 700 }}>
               {displayName || 'Student'}
             </h4>
             <div
@@ -94,8 +89,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '12px',
-                color: '#38bdf8',
+                fontSize: '0.8rem',
+                color: 'var(--accent)',
                 fontFamily: 'monospace',
                 fontWeight: 600,
                 marginTop: '3px',
@@ -106,7 +101,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               <span>•</span>
               <span>{parsed.hierarchyName || 'IIT Mandi'}</span>
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
               {user?.email || `${profile?.username}@students.iitmandi.ac.in`}
             </div>
           </div>
@@ -144,9 +139,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           style={{
             padding: '10px 14px',
             borderRadius: 'var(--radius-md)',
-            background: 'rgba(255, 255, 255, 0.03)',
+            background: 'var(--border-subtle)',
             border: '1px solid var(--border-subtle)',
-            fontSize: '12px',
+            fontSize: '0.8rem',
             color: 'var(--text-muted)',
             display: 'flex',
             alignItems: 'center',
@@ -155,7 +150,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
           }}
         >
           <span>Enrollment Number</span>
-          <span style={{ color: '#ffffff', fontWeight: 600, fontFamily: 'monospace' }}>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontFamily: 'monospace' }}>
             {profile?.username?.toUpperCase()}
           </span>
         </div>

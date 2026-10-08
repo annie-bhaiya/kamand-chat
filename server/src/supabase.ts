@@ -40,3 +40,20 @@ export function authMiddleware(factory: ClientFactory): RequestHandler {
     } catch (error) { next(error); }
   };
 }
+export function optionalAuthMiddleware(factory: ClientFactory): RequestHandler {
+  return async (req, _res, next) => {
+    try {
+      const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
+      if (match?.[1]) {
+        const verified = await authenticate(factory, match[1]);
+        Object.assign(req, verified, { accessToken: match[1] });
+      } else {
+        req.db = factory();
+      }
+      next();
+    } catch {
+      req.db = factory();
+      next();
+    }
+  };
+}
