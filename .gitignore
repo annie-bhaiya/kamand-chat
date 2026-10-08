@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+coverage/
+server/supabase/.temp/
+server/supabase/.branches/
+server/.test-artifacts/

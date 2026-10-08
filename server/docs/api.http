@@ -1,0 +1,103 @@
+@baseUrl = http://localhost:4000
+@accessToken = REPLACE_WITH_LOGIN_ACCESS_TOKEN
+@refreshToken = REPLACE_WITH_CURRENT_REFRESH_TOKEN
+@otherUserId = REPLACE_WITH_OTHER_USER_UUID
+@conversationId = REPLACE_WITH_CONVERSATION_UUID
+@messageId = REPLACE_WITH_MESSAGE_UUID
+
+### Readiness
+GET {{baseUrl}}/ready
+
+### Register (confirm email before login when required)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "ReplaceWithAStrongPassword!",
+  "display_name": "Alice"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "ReplaceWithAStrongPassword!"
+}
+
+### Current profile
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{accessToken}}
+
+### Choose a username
+PATCH {{baseUrl}}/api/users/me
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"username":"alice"}
+
+### Find users
+GET {{baseUrl}}/api/users?limit=20
+Authorization: Bearer {{accessToken}}
+
+### Create or retrieve direct conversation
+POST {{baseUrl}}/api/conversations/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"user_id":"{{otherUserId}}"}
+
+### Send (generate a new UUID for each new message; retain it for retries)
+POST {{baseUrl}}/api/conversations/{{conversationId}}/messages
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"client_message_id":"4c53e4a6-3583-4aca-91fc-18f98a7dce17","body":"Hello!"}
+
+### Most recent messages
+GET {{baseUrl}}/api/conversations/{{conversationId}}/messages?limit=50
+Authorization: Bearer {{accessToken}}
+
+### Catch up messages (continue using next_cursor when present)
+GET {{baseUrl}}/api/conversations/{{conversationId}}/messages?after_seq=0&limit=50
+Authorization: Bearer {{accessToken}}
+
+### Read receipt
+POST {{baseUrl}}/api/conversations/{{conversationId}}/read
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"seq":1}
+
+### Reaction
+POST {{baseUrl}}/api/messages/{{messageId}}/reactions
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"emoji":"👍"}
+
+### Search
+GET {{baseUrl}}/api/conversations/{{conversationId}}/messages/search?q=hello&limit=20
+Authorization: Bearer {{accessToken}}
+
+### Create group
+POST {{baseUrl}}/api/conversations/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"title":"Study group","member_ids":["{{otherUserId}}"]}
+
+### Refresh; replace both local tokens with those from the response
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{"refresh_token":"{{refreshToken}}"}
+
+### Logout current session
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{"refresh_token":"{{refreshToken}}"}

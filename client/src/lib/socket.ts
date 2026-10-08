@@ -1,0 +1,149 @@
+import { io, Socket } from 'socket.io-client';
+import { api } from './api';
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+type Listener = (...args: any[]) => void;
+
+class SocketManager {
+  private socket: Socket | null = null;
+  private listeners: Map<string, Set<Listener>> = new Map();
+  private lastTypingSent: number = 0;
+  private isConnecting: boolean = false;
+
+  connect(token: string) {
+    if (this.socket && this.socket.connected) {
+      if ((this.socket.auth as any)?.token === token) {
+        return;
+      }
+      this.disconnect();
+    }
+
+    if (this.isConnecting) return;
+    this.isConnecting = true;
+
+    this.socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
+
+    this.socket.on('connect', () => {
+      this.isConnecting = false;
+      this.dispatch('connection:status', { connected: true, status: 'connected' });
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      this.isConnecting = false;
+      this.dispatch('connection:status', { connected: false, status: 'disconnected', reason });
+    });
+
+    this.socket.on('connect_error', (err) => {
+      this.isConnecting = false;
+      this.dispatch('connection:status', { connected: false, status: 'error', error: err.message });
+    });
+
+    // Real-time server events
+    const serverEvents = [
+      'message:new',
+      'message:updated',
+      'message:deleted',
+      'message:reaction',
+      'conversation:updated',
+      'conversation:removed',
+      'conversation:read',
+      'typing',
+      'session:expired',
+    ];
+
+    for (const eventName of serverEvents) {
+      this.socket.on(eventName, (payload: any) => {
+        if (eventName === 'session:expired') {
+          // Token expired, attempt refresh
+          api.refreshTokenIfNeeded().then((newToken) => {
+            if (newToken && this.socket) {
+              this.socket.auth = { token: newToken };
+              this.socket.disconnect().connect();
+            }
+          });
+        }
+        this.dispatch(eventName, payload);
+      });
+    }
+  }
+
+  updateToken(token: string) {
+    if (this.socket) {
+      this.socket.auth = { token };
+      this.socket.disconnect().connect();
+    }
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.isConnecting = false;
+      this.dispatch('connection:status', { connected: false, status: 'disconnected' });
+    }
+  }
+
+  on(event: string, listener: Listener) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event)!.add(listener);
+    return () => this.off(event, listener);
+  }
+
+  off(event: string, listener: Listener) {
+    const set = this.listeners.get(event);
+    if (set) {
+      set.delete(listener);
+    }
+  }
+
+  private dispatch(event: string, ...args: any[]) {
+    const set = this.listeners.get(event);
+    if (set) {
+      for (const listener of set) {
+        try {
+          listener(...args);
+        } catch (err) {
+          console.error(`Error in socket event listener [${event}]:`, err);
+        }
+      }
+    }
+  }
+
+  emitTyping(conversationId: string, isTyping: boolean) {
+    if (!this.socket || !this.socket.connected) return;
+
+    const now = Date.now();
+    // Throttle positive typing events to once per second
+    if (isTyping && now - this.lastTypingSent < 1000) {
+      return;
+    }
+
+    if (isTyping) {
+      this.lastTypingSent = now;
+    }
+
+    this.socket.emit(
+      'typing',
+      { conversation_id: conversationId, is_typing: isTyping },
+      (ack: { ok: boolean; error?: string }) => {
+        // Ack received
+      }
+    );
+  }
+
+  isConnected(): boolean {
+    return !!this.socket?.connected;
+  }
+}
+
+export const socketManager = new SocketManager();
