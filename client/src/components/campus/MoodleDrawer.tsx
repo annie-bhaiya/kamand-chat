@@ -1,26 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useEffectEvent } from 'react';
-import { api } from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
-import { useAuth } from '@/context/AuthContext';
+import { useDialogFocus } from '@/components/ui/useDialogFocus';
+import { api } from '@/lib/api';
 import { MoodleAssignment } from '@/types/chat';
 import {
-  GraduationCap,
-  RefreshCw,
-  ExternalLink,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  FileText,
-  BookOpen,
-  X,
-  Bell,
-  Sparkles,
-  Filter,
-  Lock,
+Bell,
+BookOpen,
+CheckCircle2,
+Clock,
+ExternalLink,
+Filter,
+GraduationCap,
+Lock,
+RefreshCw,
+Sparkles,
+X
 } from 'lucide-react';
+import React,{ useEffect,useEffectEvent,useRef,useState } from 'react';
+import { useCampusPermissions } from './useCampusPermissions';
 
 interface MoodleDrawerProps {
   isOpen: boolean;
@@ -47,62 +45,53 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
   onClose,
   defaultCourseCode = 'IC152',
   onBroadcastAlert,
-  isAdmin,
 }) => {
+  const dialogRef = useDialogFocus(isOpen, onClose);
   const { error, success } = useToast();
-  const { profile } = useAuth();
+
   const [courseCode, setCourseCode] = useState(defaultCourseCode);
   const [assignments, setAssignments] = useState<MoodleAssignment[]>([]);
   const [lastSynced, setLastSynced] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const loadGeneration = useRef(0);
   const [now] = useState(() => Date.now());
   const [syncing, setSyncing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
-  const roll = profile?.username?.toLowerCase() || '';
-  const isCourseAdmin =
-    isAdmin !== undefined
-      ? isAdmin
-      : ['admin', 'gymkhana', 'b22001', 'b23419'].includes(roll) ||
-        roll.includes('faculty') ||
-        roll.includes('ta_');
-
-
-
+  const permissions = useCampusPermissions(courseCode.toLowerCase());
+  const isCourseAdmin = !!permissions?.canBroadcastMoodle;
 
   const loadCourseMoodleData = async (code: string) => {
+    const generation = ++loadGeneration.current;
     setLoading(true);
+    setAssignments([]);
     try {
       const res = await api.getMoodleData(code);
       if (res.data) {
+        if (generation !== loadGeneration.current) return;
         setAssignments(res.data.assignments || []);
-        setLastSynced(res.data.lastSynced || new Date().toISOString());
+        setLastSynced(res.data.lastSynced || '');
       }
     } catch (err: unknown) {
+      if (generation !== loadGeneration.current) return;
       console.error('Failed to load Moodle data:', err);
       error((err instanceof Error ? err.message : '') || 'Could not fetch Moodle LMS data');
     } finally {
-      setLoading(false);
+      if (generation === loadGeneration.current) setLoading(false);
     }
   };
   const loadOnOpen = useEffectEvent(() => loadCourseMoodleData(courseCode));
-  useEffect(() => { if (isOpen) loadOnOpen(); }, [isOpen, courseCode]);
+  // Fetch state follows the external request lifecycle.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (isOpen) loadOnOpen(); return () => { loadGeneration.current += 1; }; }, [isOpen, courseCode]);
 
   const handleSync = async () => {
     setSyncing(true);
     try {
       const res = await api.syncMoodle(courseCode);
       if (res.data && res.data.success) {
-        success(`Synced successfully with moodle.iitmandi.ac.in!`);
-        if (res.data.alert) {
-          // If we have broadcast callback, trigger it
-          if (onBroadcastAlert) {
-            onBroadcastAlert(
-              `🤖 **Moodle Bot Alert [${courseCode}]**: New ${res.data.alert.type.toUpperCase()} posted: "${res.data.alert.title}". Due: ${new Date(res.data.alert.dueDate).toLocaleString()} | Weightage: ${res.data.alert.weightage || 'N/A'}`
-            );
-          }
-        }
+        success(`Sample course reminder refreshed.`);
         await loadCourseMoodleData(courseCode);
       }
     } catch (err: unknown) {
@@ -162,8 +151,9 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Course updates" onClick={e => { if (e.target === e.currentTarget) onClose(); }} className="campus-dialog fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-2xl h-full bg-[var(--bg-secondary)] border-l border-[var(--border-subtle)] shadow-2xl flex flex-col transform transition-transform duration-300">
+        <p className="campus-demo-notice">Sample course data · Moodle is not connected.</p>
         {/* Drawer Header */}
         <div className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-secondary)]">
           <div className="flex items-center gap-3">
@@ -174,16 +164,17 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">IIT Mandi Moodle LMS</h2>
                 <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-500/10 text-[var(--accent)] border border-emerald-500/20 rounded">
-                  Live Sync
+                  Demo
                 </span>
               </div>
               <p className="text-xs text-[var(--text-secondary)]">
-                Connected to <span className="text-[var(--accent)]">moodle.iitmandi.ac.in</span>
+                Sample data for <span className="text-[var(--accent)]">moodle.iitmandi.ac.in</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors"
           >
             <X size={20} />
@@ -216,10 +207,10 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
                 <button
                   onClick={handleSync}
                   disabled={syncing}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-[var(--text-primary)] shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent)] text-[var(--on-accent)] shadow-md transition-all active:scale-95 disabled:opacity-50"
                 >
                   <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
-                  {syncing ? 'Syncing...' : 'Sync Moodle Now'}
+                  {syncing ? 'Refreshing...' : 'Refresh sample'}
                 </button>
               ) : (
                 <div
@@ -245,25 +236,26 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
 
           <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] pt-1">
             <span>
-              Last webhook sync: {lastSynced ? new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Just now'}
+              Sample refreshed: {lastSynced ? new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Not refreshed'}
             </span>
             <span className="flex items-center gap-1 text-[var(--accent)]/80">
-              <Bell size={12} /> Auto-broadcasts enabled for #{courseCode}
+              <Bell size={12} /> Sample reminders for #{courseCode}
             </span>
           </div>
         </div>
 
         {/* Filter Toolbar */}
-        <div className="px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex items-center justify-between gap-3 overflow-x-auto">
+        <div className="moodle-filters px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex items-center justify-between gap-3">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-[var(--bg-secondary)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs">
+          <div className="moodle-status-filters flex items-center gap-1 bg-[var(--bg-secondary)] p-1 rounded-lg border border-[var(--border-subtle)] text-xs">
             {(['all', 'pending', 'submitted', 'graded'] as const).map((st) => (
               <button
                 key={st}
+                aria-pressed={activeFilter === st}
                 onClick={() => setActiveFilter(st)}
                 className={`px-3 py-1 rounded-md capitalize font-medium transition-all ${
                   activeFilter === st
-                    ? 'bg-[var(--accent)] text-[var(--on-accent)] text-[var(--text-primary)] shadow-sm'
+                    ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -276,6 +268,7 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
           <div className="flex items-center gap-2">
             <Filter size={13} className="text-[var(--text-secondary)]" />
             <select
+              aria-label="Task type"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-xs rounded-md px-2 py-1 focus:outline-none focus:border-purple-500"
@@ -295,14 +288,14 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 text-[var(--text-secondary)] gap-3">
               <RefreshCw className="animate-spin text-[var(--accent)]" size={28} />
-              <p className="text-sm">Fetching course data from moodle.iitmandi.ac.in...</p>
+              <p className="text-sm">Loading sample course data...</p>
             </div>
           ) : filteredAssignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center p-6 border border-dashed border-[var(--border-subtle)] rounded-2xl bg-[var(--bg-secondary)]">
               <BookOpen size={36} className="text-[var(--text-secondary)] mb-3" />
               <p className="text-sm font-semibold text-[var(--text-secondary)]">No Moodle Items Found</p>
               <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-xs">
-                No active tasks or announcements match your filter for {courseCode}. Click &quot;Sync Moodle Now&quot; to fetch fresh updates!
+                No active tasks or announcements match your filter for {courseCode}. Click &quot;Refresh sample&quot; to preview a sample reminder.
               </p>
             </div>
           ) : (
@@ -388,10 +381,10 @@ export const MoodleDrawer: React.FC<MoodleDrawerProps> = ({
 
         {/* Footer Info */}
         <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
-          <span>IIT Mandi LMS Webhook v2.4</span>
+          <span>Sample course workspace</span>
           <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)] text-[var(--on-accent)] animate-pulse"></span>
-            Moodle Daemon Healthy
+            <span className="w-2 h-2 rounded-full bg-[var(--accent)] text-[var(--on-accent)] "></span>
+            No live Moodle connection
           </span>
         </div>
       </div>

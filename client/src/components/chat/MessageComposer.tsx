@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { api } from '@/lib/api';
 import { Attachment } from '@/types/chat';
 import {
-  Send,
-  Paperclip,
-  Smile,
-  X,
-  FileText,
-  Image as ImageIcon,
+FileText,
+Image as ImageIcon,
+Paperclip,
+Send,
+Smile,
+X,
 } from 'lucide-react';
+import React,{ useEffect,useRef,useState } from 'react';
 
 interface MessageComposerProps {
   conversationId: string;
@@ -110,20 +110,28 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     if (!trimmed && draftAttachments.length === 0) return;
     if (isSending || isUploading) return;
 
-    setIsSending(true);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     onSendTyping(false);
 
+    const savedText = text;
+    const savedDrafts = [...draftAttachments];
+    const attachmentIds = draftAttachments.map((a) => a.id);
+
+    // Optimistically clear composer inputs immediately
+    setText('');
+    setDraftAttachments([]);
+    setShowEmojiPicker(false);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    setIsSending(true);
     try {
-      const attachmentIds = draftAttachments.map((a) => a.id);
       await onSendMessage(trimmed, attachmentIds);
-      setText('');
-      setDraftAttachments([]);
-      setShowEmojiPicker(false);
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
     } catch (err: unknown) {
+      // Restore input on failure so text/drafts are not lost
+      setText(savedText);
+      setDraftAttachments(savedDrafts);
       error((err instanceof Error ? err.message : '') || 'Failed to send message');
     } finally {
       setIsSending(false);
@@ -144,15 +152,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           {draftAttachments.map((att) => (
             <div key={att.id} className="draft-pill">
               {att.mime_type.startsWith('image/') ? (
-                <ImageIcon size={14} />
+                <ImageIcon size={14} className="draft-icon" />
               ) : (
-                <FileText size={14} />
+                <FileText size={14} className="draft-icon" />
               )}
-              <span>{att.original_name}</span>
+              <span className="draft-filename">{att.original_name}</span>
               <button
                 onClick={() => handleRemoveDraft(att)}
                 className="draft-remove"
                 title="Remove attachment"
+                type="button"
               >
                 <X size={13} />
               </button>
@@ -193,7 +202,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSending}
           className="btn-icon btn-ghost"
-          style={{ width: '32px', height: '32px' }}
           title="Upload file or image (up to 10MB)"
         >
           <Paperclip size={18} />
@@ -207,9 +215,10 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           placeholder={
-            isUploading ? 'Uploading file...' : 'Write a message... (Enter to send)'
+            isUploading ? 'Uploading file...' : 'Write a message...'
           }
           className="composer-input"
+          title="Enter to send · Shift+Enter for a new line"
           rows={1}
           disabled={isSending}
         />
@@ -219,7 +228,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           type="button"
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           className="btn-icon btn-ghost"
-          style={{ width: '32px', height: '32px' }}
+          aria-label="Add emoji"
+          aria-expanded={showEmojiPicker}
           title="Add emoji"
         >
           <Smile size={18} />
@@ -235,6 +245,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             (!text.trim() && draftAttachments.length === 0)
           }
           className="composer-btn-send"
+          aria-label="Send message"
           title="Send message"
         >
           <Send size={16} />

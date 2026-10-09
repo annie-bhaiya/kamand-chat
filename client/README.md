@@ -1,20 +1,20 @@
 # Pulse Chat — Next.js Frontend
 
-A modern, elegant, and animated frontend for the chat application, built with **Next.js 16**, **TypeScript**, and **Vanilla CSS**. It interfaces with the backend server via REST APIs and real-time **Socket.IO** WebSockets.
+A modern, elegant, and animated frontend for the chat application, built with **Next.js 16**, **TypeScript**, and **semantic CSS and Tailwind utilities**. It interfaces with the backend server via REST APIs and real-time **Socket.IO** WebSockets.
 
 ---
 
 ## Features
 
 - **Authentication & Profiles**:
-  - Email & password registration and login with Supabase Auth integration.
+  - Roll-number entry leading to account sign-in or registration through Supabase Auth.
   - Automatic token refresh rotation and session recovery.
   - Profile customization: update display name, username, and avatar.
   - Server liveness and readiness status indicator.
 
 - **Real-Time Messaging**:
   - Live message delivery, edits, and soft-deletions via Socket.IO.
-  - Optimistic updates and retry deduplication with UUID `client_message_id`.
+  - Persisted message updates and retry deduplication with a stable UUID `client_message_id`.
   - Date dividers, read receipts (sent vs read by members), and smooth scrolling.
   - Web Audio API synthesized soft chimes on incoming and sent messages.
 
@@ -38,9 +38,14 @@ A modern, elegant, and animated frontend for the chat application, built with **
 - **In-Conversation Full-Text Search**:
   - Fast search through message history within active conversations.
 
-- **Modern Glassmorphic Design**:
-  - Deep space dark theme with electric violet / indigo gradients.
-  - Smooth micro-animations, accessible modal dialogs, and responsive mobile sidebar drawer.
+- **Visual settings and campus theme**:
+  - Warm paper and pine surfaces with locally hosted DM Sans typography.
+  - Light, dark, and system appearance; pine, clay, and lake accents; text size and message density.
+  - Saved device preferences, reduced-motion support, keyboard-accessible dialogs, and responsive mobile chat actions.
+
+- **Campus tools**:
+  - Course, club, hostel, branch, and mess conversations.
+  - Calendar, tickets, Moodle reminders, and mess menus are explicitly labelled sample workflows; they are not connected to official campus services. Rebate selections are a local visit draft.
 
 ---
 
@@ -75,3 +80,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 npm.cmd run build
 npm.cmd start
 ```
+
+## Verification
+
+The campus calendar and maintenance panels use Supabase-backed records. Organizers can edit, reschedule, cancel and update their own events; assigned caretakers and mess managers can update ticket status. Ticket votes, progress history and resolution timestamps persist. Open panels refresh on realtime change hints, reconnect and focus, with a 30-second fallback. Apply the server's calendar/maintenance migration before using these features; Moodle remains a separate sample integration.
+
+Run `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. The design system is recorded in `../DESIGN.md`, with review captures in `../.impeccable/review`.

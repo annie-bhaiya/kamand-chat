@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import type { ClientFactory } from '../supabase.js';
-import { authMiddleware } from '../supabase.js';
+import { authMiddleware, invalidateAuth } from '../supabase.js';
 import { unwrap } from '../errors.js';
 import { registerSchema, loginSchema, refreshSchema } from '../validation.js';
 import type { Events } from '../events.js';
@@ -63,17 +63,9 @@ export function authRoutes(factory: ClientFactory, events: Events) {
     const client = factory();
 
     // Auto-detect if user exists in Supabase
-    let exists = false;
-    let foundDisplayName: string | undefined = input.display_name;
-    try {
-      const checkResult = unwrap(await client.rpc('check_user_exists', { p_email: input.email }));
-      exists = Boolean(checkResult?.exists);
-      if (checkResult?.display_name && !foundDisplayName) {
-        foundDisplayName = checkResult.display_name;
-      }
-    } catch {
-      exists = false;
-    }
+    const checkResult = unwrap(await client.rpc('check_user_exists', { p_email: input.email }));
+    const exists = Boolean(checkResult?.exists);
+    const foundDisplayName = input.display_name || checkResult?.display_name;
 
     if (!exists) {
       // User is not created in Supabase yet.
@@ -137,6 +129,7 @@ export function authRoutes(factory: ClientFactory, events: Events) {
   });
   router.post('/logout', authMiddleware(factory), async (req, res) => {
     const input = refreshSchema.parse(req.body);
+    invalidateAuth(req.accessToken);
     // A separate client per request avoids sharing sessions between users.
     const client = factory();
     unwrap(await client.auth.setSession({ access_token: req.accessToken, refresh_token: input.refresh_token }));

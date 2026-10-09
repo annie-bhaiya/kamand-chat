@@ -1,7 +1,8 @@
 'use client';
 
+import { getAvatarGradient, getAvatarSrc, getInitials } from '@/lib/utils';
+import Image from 'next/image';
 import React from 'react';
-import { getAvatarGradient, getInitials } from '@/lib/utils';
 
 interface AvatarProps {
   name?: string | null;
@@ -31,6 +32,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   const { size: pixelSize, font, dot } = SIZE_MAP[size];
   const gradient = getAvatarGradient(name || 'pulse');
   const initials = getInitials(name);
+  const avatarSrc = getAvatarSrc(src);
 
   return (
     <div
@@ -50,11 +52,11 @@ export const Avatar: React.FC<AvatarProps> = ({
           width: '100%',
           height: '100%',
           borderRadius: '50%',
-          background: src ? 'transparent' : gradient,
+          background: avatarSrc ? 'transparent' : gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--text-primary)',
+          color: '#ffffff',
           fontWeight: 700,
           fontSize: font,
           letterSpacing: '-0.02em',
@@ -64,9 +66,9 @@ export const Avatar: React.FC<AvatarProps> = ({
           border: '1.5px solid rgba(255, 255, 255, 0.12)',
         }}
       >
-        {src ? (
-          <img
-            src={src}
+        {avatarSrc ? (
+          <Image unoptimized width={pixelSize} height={pixelSize}
+            src={avatarSrc}
             alt={name || 'Avatar'}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
@@ -85,8 +87,8 @@ export const Avatar: React.FC<AvatarProps> = ({
             height: dot,
             borderRadius: '50%',
             backgroundColor: online ? '#10b981' : '#64748b',
-            border: '2px solid #0e1526',
-            boxShadow: online ? '0 0 8px rgba(16, 185, 129, 0.6)' : 'none',
+            border: '2px solid var(--bg-secondary)',
+            boxShadow: 'none',
           }}
         />
       )}

@@ -9,12 +9,13 @@ import { createClientFactory, authMiddleware, optionalAuthMiddleware, type Clien
 import { ApiError, errorHandler } from './errors.js';
 import { Events } from './events.js';
 import { authRoutes } from './routes/auth.js';
-import { userRoutes } from './routes/users.js';
+import { userRoutes, publicUserRoutes } from './routes/users.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { messageRoutes } from './routes/messages.js';
 import { attachmentRoutes } from './routes/attachments.js';
 import { campusRoutes } from './routes/campus.js';
 import { openapi } from './openapi.js';
+import { simulationRoutes } from './simulation.js';
 
 export function createApp(config: Config, options: { factory?: ClientFactory; events?: Events } = {}) {
   const app = express();
@@ -38,7 +39,14 @@ export function createApp(config: Config, options: { factory?: ClientFactory; ev
     app.use('/api', rateLimit({ windowMs: 60000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } } }));
   }
   app.use('/api/auth', authRoutes(factory, events));
+  if (config.NODE_ENV === 'development') {
+    app.use('/simulate', simulationRoutes(factory));
+    app.use('/api/simulate', simulationRoutes(factory));
+  } else {
+    app.use(['/simulate', '/api/simulate'], (_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found.')));
+  }
   app.use('/api/campus', optionalAuthMiddleware(factory), campusRoutes(factory, events));
+  app.use('/api/users', optionalAuthMiddleware(factory), publicUserRoutes());
   app.use('/api', authMiddleware(factory));
   app.use('/api/users', userRoutes());
   app.use('/api/conversations', conversationRoutes(events));

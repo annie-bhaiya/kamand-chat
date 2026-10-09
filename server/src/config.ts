@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { z } from 'zod';
 
 const schema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
   PORT: z.coerce.number().int().min(0).max(65535).default(4000),
   HOST: z.string().default('127.0.0.1'),
   CLIENT_ORIGINS: z.string().default('http://localhost:3000,http://localhost:5173'),
@@ -14,6 +14,7 @@ const schema = z.object({
     catch { return true; }
   }, 'Use a publishable key or legacy anon key for user-scoped database access.'),
   STORAGE_BUCKET: z.literal('chat-attachments').default('chat-attachments'),
+  AVATARS_BUCKET: z.string().default('avatars'),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().max(10485760).default(10485760),
   REDIS_URL: z.string().optional(),
 });

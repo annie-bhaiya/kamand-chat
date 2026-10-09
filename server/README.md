@@ -1,6 +1,6 @@
 # First Commit chat backend
 
-Node.js 22+ and TypeScript, Express 5, Supabase JavaScript SDK, PostgreSQL, Supabase Auth, private Supabase Storage, and Socket.IO. There is no frontend in this workspace yet. REST endpoints, the SQL migration, local configuration, and automated tests live in this folder.
+Node.js 22+ and TypeScript, Express 5, Supabase JavaScript SDK, PostgreSQL, Supabase Auth, private Supabase Storage, and Socket.IO. The Next.js frontend lives in `../client`; REST endpoints, SQL migrations, local configuration, and automated tests live in this folder.
 
 
 
@@ -137,3 +137,31 @@ npm.cmd start
 ```
 
 Use `/ready` as the readiness probe. Production backups, restore testing, email provider settings, and monitoring are configured in your hosting/Supabase project.
+
+## Campus tools and visual preferences
+
+The client prioritizes student conversations and provides light/dark/system appearance, pine/clay/lake accents, text sizing, message density, and reduced motion. DM Sans is served locally. Run `npm install`, `npm run dev`, `npm test`, `npm run typecheck`, and `npm run lint` in `../client`; the default frontend is http://localhost:3000 and API is http://localhost:4000.
+
+Calendar events, maintenance tickets, votes, status history and mess-menu edits persist in Supabase. Moodle reminders remain an explicit in-memory sample integration. Mess menus start with sample defaults; manager edits persist with room-scoped RLS. Mess rebate dates are a local visit draft, not a submitted claim. Sample Moodle refresh never automatically posts a chat message.
+
+Campus room identity is maintained by the private canonical catalogue migration `20261009033001_secure_campus_room_identity.sql`. Joining validates the slug and title and serializes creation. Anonymous execution is denied. Legacy groups remain intact and are not automatically adopted by matching titles; any legacy-room mapping requires an explicit database administrator decision. Privileged campus actions derive from verified institute email and room-specific rules, not editable usernames or display names.
+
+## Development simulation
+
+Run `npm run seed:simulation` in `server` with `NODE_ENV=development` and the configured `DATABASE_URL`, after applying migrations. It creates 27 club coordinators, 9 hostel caretakers, 5 mess managers and 3 students. Reruns reuse dummy credentials and refuse to overwrite non-demo accounts. Credentials are saved outside the repository at `../../chat-simulation-accounts.json` (the parent of the repository).
+
+Start both apps with `npm run dev`, then open http://localhost:3000/simulate. Search by role or room and choose **Sign in**. The picker obtains a real Supabase session, then remounts the chat app. The server exposes `GET /simulate` (account catalogue without passwords) and `POST /simulate` with `{ "username": "demo_coord_kamandprompt" }`; `/api/simulate` is an equivalent frontend API path. Both paths return 404 outside explicit development mode. An unset server environment defaults to production; `npm run dev` explicitly sets development.
+
+Managers are assigned canonical room slugs in administrator-controlled `app_metadata.campus_rooms`. The database enforces these assignments for campus room renaming and adding/removing students. Joining first never gives a student management rights. Ordinary group ownership remains unchanged. Open **Group Information** to search registered students and add/remove them. Club coordinators can create and approve their club events; caretakers and mess managers can resolve their assigned maintenance tickets. Mess managers can edit meal descriptions and special notices in the menu drawer.
+
+Run `npx tsx scripts/verify-simulation.ts` to verify one real account of each role, membership revocation, event/ticket permissions and menu persistence. Pass `--all` to verify every account login. The script also checks persistence across server instances, concurrent venue bookings, rescheduling, votes and ticket history. It respects Auth rate limits, removes only its own newly created demo event/ticket fixtures, logs out its sessions, removes its test student's room memberships, and saves the same effective menu contents.
+
+## Persistent calendar and maintenance
+
+Apply `20261009035734_persist_calendar_maintenance.sql` with `npm run db:apply` (or the usual Supabase migration workflow). The migration creates `campus_events`, `maintenance_tickets`, `maintenance_ticket_votes` and `maintenance_ticket_history`, and adds canonical scope metadata to the private room catalogue. The hosted project already has this migration applied. New feeds start empty; bundled samples are not represented as real reports or reservations. The pre-migration sample feed was backed up in the repository's parent directory as `chat-campus-pre-persistence.json`.
+
+Calendar list/filter/create/status endpoints retain their existing paths. `PATCH /api/campus/events/:id` edits or reschedules an event using the same fields as creation. Status supports `cancelled`; cancelling releases the venue. Database advisory locks serialize reservation changes per venue/date, including status approvals. Overlapping submissions remain stored as `conflict`, and an approval cannot bypass an existing reservation. IDs are UUIDs. Responses include `roomSlug`, `updatedAt` and authoritative `canManage` values.
+
+Maintenance endpoints require authentication. Reports are visible to the reporter, residents or joined members of that hostel/mess scope, and its assigned managers. Only the scope's caretakers/managers can change status. Votes are unique per account and updated atomically; voter identities are private and `upvotedBy` includes only the caller when they have voted. History and resolution timestamps persist; reopening clears the resolution timestamp. Scope/campus/creator are resolved from the canonical catalogue and authenticated account. API callers cannot directly insert or update tables to bypass these rules.
+
+Public RPCs are security invoker wrappers; privileged implementations remain in `private`, validate active sessions and enforce the relevant scope. All four tables have RLS. `campus:changed` Socket.IO messages contain only a refresh hint (`events` or `tickets`), and clients fetch permitted records through the API. Open panels also refresh on reconnect, window focus and every 30 seconds.

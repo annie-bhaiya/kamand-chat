@@ -1,15 +1,15 @@
 'use client';
 
-import React from 'react';
-import { Conversation } from '@/types/chat';
 import { Avatar } from '@/components/ui/Avatar';
 import {
   formatTimeAgo,
   getConversationMembers,
-  getOtherMember,
   getMemberProfile,
+  getOtherMember,
 } from '@/lib/utils';
+import { Conversation } from '@/types/chat';
 import { Users } from 'lucide-react';
+import React from 'react';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -17,6 +17,7 @@ interface ConversationItemProps {
   currentUserId: string;
   isTyping: boolean;
   onClick: () => void;
+  onPrefetch?: () => void;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
@@ -25,6 +26,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   currentUserId,
   isTyping,
   onClick,
+  onPrefetch,
 }) => {
   const isDirect = conversation.type === 'direct';
 
@@ -64,6 +66,18 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
   return (
     <div
       onClick={onClick}
+      onMouseEnter={onPrefetch}
+      onTouchStart={onPrefetch}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${displayName}`}
+      aria-current={isActive ? 'true' : undefined}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       className={`conversation-item ${isActive ? 'active' : ''}`}
     >
       {isDirect ? (
@@ -80,11 +94,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#c084fc',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+            color: 'var(--on-accent)',
+            boxShadow: 'none',
             fontWeight: 'bold',
             fontSize: '1.067rem',
-            fontFamily: 'monospace',
+            fontFamily: 'inherit',
           }}
         >
           #
@@ -100,8 +114,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--text-primary)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+            color: 'var(--on-accent)',
+            boxShadow: 'none',
           }}
         >
           <Users size={18} />
@@ -117,8 +131,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                 style={{
                   fontSize: '0.8rem',
                   color: 'var(--text-muted)',
-                  fontFamily: 'monospace',
-                  letterSpacing: '0.02em',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {subtitleHandle}

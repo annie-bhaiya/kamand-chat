@@ -1,0 +1,1147 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-09T00:42:19.129Z",
+  "title": "Design System: KamandChat",
+  "extensions": {
+    "colorMeta": {
+      "bg-primary": {
+        "role": "neutral",
+        "displayName": "Bg Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0054 95.1)",
+          "oklch(26.4% 0.0054 95.1)",
+          "oklch(37.9% 0.0054 95.1)",
+          "oklch(49.3% 0.0054 95.1)",
+          "oklch(60.7% 0.0054 95.1)",
+          "oklch(72.1% 0.0054 95.1)",
+          "oklch(83.6% 0.0054 95.1)",
+          "oklch(95% 0.0054 95.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-secondary": {
+        "role": "neutral",
+        "displayName": "Bg Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.9)",
+          "oklch(26.4% 0.0000 89.9)",
+          "oklch(37.9% 0.0000 89.9)",
+          "oklch(49.3% 0.0000 89.9)",
+          "oklch(60.7% 0.0000 89.9)",
+          "oklch(72.1% 0.0000 89.9)",
+          "oklch(83.6% 0.0000 89.9)",
+          "oklch(95% 0.0000 89.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-tertiary": {
+        "role": "neutral",
+        "displayName": "Bg Tertiary",
+        "tonalRamp": [
+          "oklch(15% 0.0106 106.6)",
+          "oklch(26.4% 0.0106 106.6)",
+          "oklch(37.9% 0.0106 106.6)",
+          "oklch(49.3% 0.0106 106.6)",
+          "oklch(60.7% 0.0106 106.6)",
+          "oklch(72.1% 0.0106 106.6)",
+          "oklch(83.6% 0.0106 106.6)",
+          "oklch(95% 0.0106 106.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-elevated": {
+        "role": "neutral",
+        "displayName": "Bg Elevated",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.9)",
+          "oklch(26.4% 0.0000 89.9)",
+          "oklch(37.9% 0.0000 89.9)",
+          "oklch(49.3% 0.0000 89.9)",
+          "oklch(60.7% 0.0000 89.9)",
+          "oklch(72.1% 0.0000 89.9)",
+          "oklch(83.6% 0.0000 89.9)",
+          "oklch(95% 0.0000 89.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-glass": {
+        "role": "neutral",
+        "displayName": "Bg Glass",
+        "tonalRamp": [
+          "oklch(15% 0.0080 98.9)",
+          "oklch(26.4% 0.0080 98.9)",
+          "oklch(37.9% 0.0080 98.9)",
+          "oklch(49.3% 0.0080 98.9)",
+          "oklch(60.7% 0.0080 98.9)",
+          "oklch(72.1% 0.0080 98.9)",
+          "oklch(83.6% 0.0080 98.9)",
+          "oklch(95% 0.0080 98.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-glass-card": {
+        "role": "neutral",
+        "displayName": "Bg Glass Card",
+        "tonalRamp": [
+          "oklch(15% 0.0106 106.6)",
+          "oklch(26.4% 0.0106 106.6)",
+          "oklch(37.9% 0.0106 106.6)",
+          "oklch(49.3% 0.0106 106.6)",
+          "oklch(60.7% 0.0106 106.6)",
+          "oklch(72.1% 0.0106 106.6)",
+          "oklch(83.6% 0.0106 106.6)",
+          "oklch(95% 0.0106 106.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-glass-hover": {
+        "role": "neutral",
+        "displayName": "Bg Glass Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0122 116.8)",
+          "oklch(26.4% 0.0122 116.8)",
+          "oklch(37.9% 0.0122 116.8)",
+          "oklch(49.3% 0.0122 116.8)",
+          "oklch(60.7% 0.0122 116.8)",
+          "oklch(72.1% 0.0122 116.8)",
+          "oklch(83.6% 0.0122 116.8)",
+          "oklch(95% 0.0122 116.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "bg-glass-active": {
+        "role": "neutral",
+        "displayName": "Bg Glass Active",
+        "tonalRamp": [
+          "oklch(15% 0.0136 134.9)",
+          "oklch(26.4% 0.0136 134.9)",
+          "oklch(37.9% 0.0136 134.9)",
+          "oklch(49.3% 0.0136 134.9)",
+          "oklch(60.7% 0.0136 134.9)",
+          "oklch(72.1% 0.0136 134.9)",
+          "oklch(83.6% 0.0136 134.9)",
+          "oklch(95% 0.0136 134.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0285 166.6)",
+          "oklch(26.4% 0.0285 166.6)",
+          "oklch(37.9% 0.0285 166.6)",
+          "oklch(49.3% 0.0285 166.6)",
+          "oklch(60.7% 0.0285 166.6)",
+          "oklch(72.1% 0.0285 166.6)",
+          "oklch(83.6% 0.0285 166.6)",
+          "oklch(95% 0.0285 166.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0252 157.9)",
+          "oklch(26.4% 0.0252 157.9)",
+          "oklch(37.9% 0.0252 157.9)",
+          "oklch(49.3% 0.0252 157.9)",
+          "oklch(60.7% 0.0252 157.9)",
+          "oklch(72.1% 0.0252 157.9)",
+          "oklch(83.6% 0.0252 157.9)",
+          "oklch(95% 0.0252 157.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0210 155.4)",
+          "oklch(26.4% 0.0210 155.4)",
+          "oklch(37.9% 0.0210 155.4)",
+          "oklch(49.3% 0.0210 155.4)",
+          "oklch(60.7% 0.0210 155.4)",
+          "oklch(72.1% 0.0210 155.4)",
+          "oklch(83.6% 0.0210 155.4)",
+          "oklch(95% 0.0210 155.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "border-subtle": {
+        "role": "neutral",
+        "displayName": "Border Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0144 128.6)",
+          "oklch(26.4% 0.0144 128.6)",
+          "oklch(37.9% 0.0144 128.6)",
+          "oklch(49.3% 0.0144 128.6)",
+          "oklch(60.7% 0.0144 128.6)",
+          "oklch(72.1% 0.0144 128.6)",
+          "oklch(83.6% 0.0144 128.6)",
+          "oklch(95% 0.0144 128.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "border-medium": {
+        "role": "neutral",
+        "displayName": "Border Medium",
+        "tonalRamp": [
+          "oklch(15% 0.0204 143.0)",
+          "oklch(26.4% 0.0204 143.0)",
+          "oklch(37.9% 0.0204 143.0)",
+          "oklch(49.3% 0.0204 143.0)",
+          "oklch(60.7% 0.0204 143.0)",
+          "oklch(72.1% 0.0204 143.0)",
+          "oklch(83.6% 0.0204 143.0)",
+          "oklch(95% 0.0204 143.0)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0659 168.8)",
+          "oklch(26.4% 0.0659 168.8)",
+          "oklch(37.9% 0.0659 168.8)",
+          "oklch(49.3% 0.0659 168.8)",
+          "oklch(60.7% 0.0659 168.8)",
+          "oklch(72.1% 0.0659 168.8)",
+          "oklch(83.6% 0.0659 168.8)",
+          "oklch(95% 0.0659 168.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0542 167.0)",
+          "oklch(26.4% 0.0542 167.0)",
+          "oklch(37.9% 0.0542 167.0)",
+          "oklch(49.3% 0.0542 167.0)",
+          "oklch(60.7% 0.0542 167.0)",
+          "oklch(72.1% 0.0542 167.0)",
+          "oklch(83.6% 0.0542 167.0)",
+          "oklch(95% 0.0542 167.0)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.9)",
+          "oklch(26.4% 0.0000 89.9)",
+          "oklch(37.9% 0.0000 89.9)",
+          "oklch(49.3% 0.0000 89.9)",
+          "oklch(60.7% 0.0000 89.9)",
+          "oklch(72.1% 0.0000 89.9)",
+          "oklch(83.6% 0.0000 89.9)",
+          "oklch(95% 0.0000 89.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "accent-light": {
+        "role": "primary",
+        "displayName": "Accent Light",
+        "rampPurpose": "Dynamic semantic mixture; no fixed tonal ramp."
+      },
+      "bubble-received": {
+        "role": "neutral",
+        "displayName": "Bubble Received",
+        "tonalRamp": [
+          "oklch(15% 0.0095 119.6)",
+          "oklch(26.4% 0.0095 119.6)",
+          "oklch(37.9% 0.0095 119.6)",
+          "oklch(49.3% 0.0095 119.6)",
+          "oklch(60.7% 0.0095 119.6)",
+          "oklch(72.1% 0.0095 119.6)",
+          "oklch(83.6% 0.0095 119.6)",
+          "oklch(95% 0.0095 119.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success",
+        "tonalRamp": [
+          "oklch(15% 0.1007 153.4)",
+          "oklch(26.4% 0.1007 153.4)",
+          "oklch(37.9% 0.1007 153.4)",
+          "oklch(49.3% 0.1007 153.4)",
+          "oklch(60.7% 0.1007 153.4)",
+          "oklch(72.1% 0.1007 153.4)",
+          "oklch(83.6% 0.1007 153.4)",
+          "oklch(95% 0.1007 153.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "success-light": {
+        "role": "semantic",
+        "displayName": "Success Light",
+        "tonalRamp": [
+          "oklch(15% 0.0204 145.4)",
+          "oklch(26.4% 0.0204 145.4)",
+          "oklch(37.9% 0.0204 145.4)",
+          "oklch(49.3% 0.0204 145.4)",
+          "oklch(60.7% 0.0204 145.4)",
+          "oklch(72.1% 0.0204 145.4)",
+          "oklch(83.6% 0.0204 145.4)",
+          "oklch(95% 0.0204 145.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15% 0.1031 67.6)",
+          "oklch(26.4% 0.1031 67.6)",
+          "oklch(37.9% 0.1031 67.6)",
+          "oklch(49.3% 0.1031 67.6)",
+          "oklch(60.7% 0.1031 67.6)",
+          "oklch(72.1% 0.1031 67.6)",
+          "oklch(83.6% 0.1031 67.6)",
+          "oklch(95% 0.1031 67.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "warning-light": {
+        "role": "semantic",
+        "displayName": "Warning Light",
+        "tonalRamp": [
+          "oklch(15% 0.0295 80.7)",
+          "oklch(26.4% 0.0295 80.7)",
+          "oklch(37.9% 0.0295 80.7)",
+          "oklch(49.3% 0.0295 80.7)",
+          "oklch(60.7% 0.0295 80.7)",
+          "oklch(72.1% 0.0295 80.7)",
+          "oklch(83.6% 0.0295 80.7)",
+          "oklch(95% 0.0295 80.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15% 0.1508 21.0)",
+          "oklch(26.4% 0.1508 21.0)",
+          "oklch(37.9% 0.1508 21.0)",
+          "oklch(49.3% 0.1508 21.0)",
+          "oklch(60.7% 0.1508 21.0)",
+          "oklch(72.1% 0.1508 21.0)",
+          "oklch(83.6% 0.1508 21.0)",
+          "oklch(95% 0.1508 21.0)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "danger-light": {
+        "role": "semantic",
+        "displayName": "Danger Light",
+        "tonalRamp": [
+          "oklch(15% 0.0220 21.0)",
+          "oklch(26.4% 0.0220 21.0)",
+          "oklch(37.9% 0.0220 21.0)",
+          "oklch(49.3% 0.0220 21.0)",
+          "oklch(60.7% 0.0220 21.0)",
+          "oklch(72.1% 0.0220 21.0)",
+          "oklch(83.6% 0.0220 21.0)",
+          "oklch(95% 0.0220 21.0)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-primary": {
+        "role": "neutral",
+        "displayName": "Dark Bg Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0164 168.3)",
+          "oklch(26.4% 0.0164 168.3)",
+          "oklch(37.9% 0.0164 168.3)",
+          "oklch(49.3% 0.0164 168.3)",
+          "oklch(60.7% 0.0164 168.3)",
+          "oklch(72.1% 0.0164 168.3)",
+          "oklch(83.6% 0.0164 168.3)",
+          "oklch(95% 0.0164 168.3)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-secondary": {
+        "role": "neutral",
+        "displayName": "Dark Bg Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0232 162.6)",
+          "oklch(26.4% 0.0232 162.6)",
+          "oklch(37.9% 0.0232 162.6)",
+          "oklch(49.3% 0.0232 162.6)",
+          "oklch(60.7% 0.0232 162.6)",
+          "oklch(72.1% 0.0232 162.6)",
+          "oklch(83.6% 0.0232 162.6)",
+          "oklch(95% 0.0232 162.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-tertiary": {
+        "role": "neutral",
+        "displayName": "Dark Bg Tertiary",
+        "tonalRamp": [
+          "oklch(15% 0.0276 161.1)",
+          "oklch(26.4% 0.0276 161.1)",
+          "oklch(37.9% 0.0276 161.1)",
+          "oklch(49.3% 0.0276 161.1)",
+          "oklch(60.7% 0.0276 161.1)",
+          "oklch(72.1% 0.0276 161.1)",
+          "oklch(83.6% 0.0276 161.1)",
+          "oklch(95% 0.0276 161.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-elevated": {
+        "role": "neutral",
+        "displayName": "Dark Bg Elevated",
+        "tonalRamp": [
+          "oklch(15% 0.0282 158.7)",
+          "oklch(26.4% 0.0282 158.7)",
+          "oklch(37.9% 0.0282 158.7)",
+          "oklch(49.3% 0.0282 158.7)",
+          "oklch(60.7% 0.0282 158.7)",
+          "oklch(72.1% 0.0282 158.7)",
+          "oklch(83.6% 0.0282 158.7)",
+          "oklch(95% 0.0282 158.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-glass": {
+        "role": "neutral",
+        "displayName": "Dark Bg Glass",
+        "tonalRamp": [
+          "oklch(15% 0.0202 162.8)",
+          "oklch(26.4% 0.0202 162.8)",
+          "oklch(37.9% 0.0202 162.8)",
+          "oklch(49.3% 0.0202 162.8)",
+          "oklch(60.7% 0.0202 162.8)",
+          "oklch(72.1% 0.0202 162.8)",
+          "oklch(83.6% 0.0202 162.8)",
+          "oklch(95% 0.0202 162.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-glass-card": {
+        "role": "neutral",
+        "displayName": "Dark Bg Glass Card",
+        "tonalRamp": [
+          "oklch(15% 0.0276 161.1)",
+          "oklch(26.4% 0.0276 161.1)",
+          "oklch(37.9% 0.0276 161.1)",
+          "oklch(49.3% 0.0276 161.1)",
+          "oklch(60.7% 0.0276 161.1)",
+          "oklch(72.1% 0.0276 161.1)",
+          "oklch(83.6% 0.0276 161.1)",
+          "oklch(95% 0.0276 161.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-glass-hover": {
+        "role": "neutral",
+        "displayName": "Dark Bg Glass Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0311 158.8)",
+          "oklch(26.4% 0.0311 158.8)",
+          "oklch(37.9% 0.0311 158.8)",
+          "oklch(49.3% 0.0311 158.8)",
+          "oklch(60.7% 0.0311 158.8)",
+          "oklch(72.1% 0.0311 158.8)",
+          "oklch(83.6% 0.0311 158.8)",
+          "oklch(95% 0.0311 158.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bg-glass-active": {
+        "role": "neutral",
+        "displayName": "Dark Bg Glass Active",
+        "tonalRamp": [
+          "oklch(15% 0.0403 154.9)",
+          "oklch(26.4% 0.0403 154.9)",
+          "oklch(37.9% 0.0403 154.9)",
+          "oklch(49.3% 0.0403 154.9)",
+          "oklch(60.7% 0.0403 154.9)",
+          "oklch(72.1% 0.0403 154.9)",
+          "oklch(83.6% 0.0403 154.9)",
+          "oklch(95% 0.0403 154.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-text-primary": {
+        "role": "neutral",
+        "displayName": "Dark Text Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0143 128.6)",
+          "oklch(26.4% 0.0143 128.6)",
+          "oklch(37.9% 0.0143 128.6)",
+          "oklch(49.3% 0.0143 128.6)",
+          "oklch(60.7% 0.0143 128.6)",
+          "oklch(72.1% 0.0143 128.6)",
+          "oklch(83.6% 0.0143 128.6)",
+          "oklch(95% 0.0143 128.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-text-secondary": {
+        "role": "neutral",
+        "displayName": "Dark Text Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0218 147.6)",
+          "oklch(26.4% 0.0218 147.6)",
+          "oklch(37.9% 0.0218 147.6)",
+          "oklch(49.3% 0.0218 147.6)",
+          "oklch(60.7% 0.0218 147.6)",
+          "oklch(72.1% 0.0218 147.6)",
+          "oklch(83.6% 0.0218 147.6)",
+          "oklch(95% 0.0218 147.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-text-muted": {
+        "role": "neutral",
+        "displayName": "Dark Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0256 151.1)",
+          "oklch(26.4% 0.0256 151.1)",
+          "oklch(37.9% 0.0256 151.1)",
+          "oklch(49.3% 0.0256 151.1)",
+          "oklch(60.7% 0.0256 151.1)",
+          "oklch(72.1% 0.0256 151.1)",
+          "oklch(83.6% 0.0256 151.1)",
+          "oklch(95% 0.0256 151.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-border-subtle": {
+        "role": "neutral",
+        "displayName": "Dark Border Subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0316 153.4)",
+          "oklch(26.4% 0.0316 153.4)",
+          "oklch(37.9% 0.0316 153.4)",
+          "oklch(49.3% 0.0316 153.4)",
+          "oklch(60.7% 0.0316 153.4)",
+          "oklch(72.1% 0.0316 153.4)",
+          "oklch(83.6% 0.0316 153.4)",
+          "oklch(95% 0.0316 153.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-border-medium": {
+        "role": "neutral",
+        "displayName": "Dark Border Medium",
+        "tonalRamp": [
+          "oklch(15% 0.0428 143.7)",
+          "oklch(26.4% 0.0428 143.7)",
+          "oklch(37.9% 0.0428 143.7)",
+          "oklch(49.3% 0.0428 143.7)",
+          "oklch(60.7% 0.0428 143.7)",
+          "oklch(72.1% 0.0428 143.7)",
+          "oklch(83.6% 0.0428 143.7)",
+          "oklch(95% 0.0428 143.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-accent": {
+        "role": "primary",
+        "displayName": "Dark Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0688 147.5)",
+          "oklch(26.4% 0.0688 147.5)",
+          "oklch(37.9% 0.0688 147.5)",
+          "oklch(49.3% 0.0688 147.5)",
+          "oklch(60.7% 0.0688 147.5)",
+          "oklch(72.1% 0.0688 147.5)",
+          "oklch(83.6% 0.0688 147.5)",
+          "oklch(95% 0.0688 147.5)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-accent-hover": {
+        "role": "primary",
+        "displayName": "Dark Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0603 147.3)",
+          "oklch(26.4% 0.0603 147.3)",
+          "oklch(37.9% 0.0603 147.3)",
+          "oklch(49.3% 0.0603 147.3)",
+          "oklch(60.7% 0.0603 147.3)",
+          "oklch(72.1% 0.0603 147.3)",
+          "oklch(83.6% 0.0603 147.3)",
+          "oklch(95% 0.0603 147.3)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-on-accent": {
+        "role": "primary",
+        "displayName": "Dark On Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0364 158.7)",
+          "oklch(26.4% 0.0364 158.7)",
+          "oklch(37.9% 0.0364 158.7)",
+          "oklch(49.3% 0.0364 158.7)",
+          "oklch(60.7% 0.0364 158.7)",
+          "oklch(72.1% 0.0364 158.7)",
+          "oklch(83.6% 0.0364 158.7)",
+          "oklch(95% 0.0364 158.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-bubble-received": {
+        "role": "neutral",
+        "displayName": "Dark Bubble Received",
+        "tonalRamp": [
+          "oklch(15% 0.0305 157.4)",
+          "oklch(26.4% 0.0305 157.4)",
+          "oklch(37.9% 0.0305 157.4)",
+          "oklch(49.3% 0.0305 157.4)",
+          "oklch(60.7% 0.0305 157.4)",
+          "oklch(72.1% 0.0305 157.4)",
+          "oklch(83.6% 0.0305 157.4)",
+          "oklch(95% 0.0305 157.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-success": {
+        "role": "semantic",
+        "displayName": "Dark Success",
+        "tonalRamp": [
+          "oklch(15% 0.0782 152.0)",
+          "oklch(26.4% 0.0782 152.0)",
+          "oklch(37.9% 0.0782 152.0)",
+          "oklch(49.3% 0.0782 152.0)",
+          "oklch(60.7% 0.0782 152.0)",
+          "oklch(72.1% 0.0782 152.0)",
+          "oklch(83.6% 0.0782 152.0)",
+          "oklch(95% 0.0782 152.0)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-success-light": {
+        "role": "semantic",
+        "displayName": "Dark Success Light",
+        "tonalRamp": [
+          "oklch(15% 0.0383 156.8)",
+          "oklch(26.4% 0.0383 156.8)",
+          "oklch(37.9% 0.0383 156.8)",
+          "oklch(49.3% 0.0383 156.8)",
+          "oklch(60.7% 0.0383 156.8)",
+          "oklch(72.1% 0.0383 156.8)",
+          "oklch(83.6% 0.0383 156.8)",
+          "oklch(95% 0.0383 156.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-warning": {
+        "role": "semantic",
+        "displayName": "Dark Warning",
+        "tonalRamp": [
+          "oklch(15% 0.0854 79.1)",
+          "oklch(26.4% 0.0854 79.1)",
+          "oklch(37.9% 0.0854 79.1)",
+          "oklch(49.3% 0.0854 79.1)",
+          "oklch(60.7% 0.0854 79.1)",
+          "oklch(72.1% 0.0854 79.1)",
+          "oklch(83.6% 0.0854 79.1)",
+          "oklch(95% 0.0854 79.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-warning-light": {
+        "role": "semantic",
+        "displayName": "Dark Warning Light",
+        "tonalRamp": [
+          "oklch(15% 0.0281 80.2)",
+          "oklch(26.4% 0.0281 80.2)",
+          "oklch(37.9% 0.0281 80.2)",
+          "oklch(49.3% 0.0281 80.2)",
+          "oklch(60.7% 0.0281 80.2)",
+          "oklch(72.1% 0.0281 80.2)",
+          "oklch(83.6% 0.0281 80.2)",
+          "oklch(95% 0.0281 80.2)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-danger": {
+        "role": "semantic",
+        "displayName": "Dark Danger",
+        "tonalRamp": [
+          "oklch(15% 0.0832 22.7)",
+          "oklch(26.4% 0.0832 22.7)",
+          "oklch(37.9% 0.0832 22.7)",
+          "oklch(49.3% 0.0832 22.7)",
+          "oklch(60.7% 0.0832 22.7)",
+          "oklch(72.1% 0.0832 22.7)",
+          "oklch(83.6% 0.0832 22.7)",
+          "oklch(95% 0.0832 22.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-danger-light": {
+        "role": "semantic",
+        "displayName": "Dark Danger Light",
+        "tonalRamp": [
+          "oklch(15% 0.0329 19.1)",
+          "oklch(26.4% 0.0329 19.1)",
+          "oklch(37.9% 0.0329 19.1)",
+          "oklch(49.3% 0.0329 19.1)",
+          "oklch(60.7% 0.0329 19.1)",
+          "oklch(72.1% 0.0329 19.1)",
+          "oklch(83.6% 0.0329 19.1)",
+          "oklch(95% 0.0329 19.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "clay-accent": {
+        "role": "primary",
+        "displayName": "Clay Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0964 35.1)",
+          "oklch(26.4% 0.0964 35.1)",
+          "oklch(37.9% 0.0964 35.1)",
+          "oklch(49.3% 0.0964 35.1)",
+          "oklch(60.7% 0.0964 35.1)",
+          "oklch(72.1% 0.0964 35.1)",
+          "oklch(83.6% 0.0964 35.1)",
+          "oklch(95% 0.0964 35.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "clay-accent-hover": {
+        "role": "primary",
+        "displayName": "Clay Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0827 35.1)",
+          "oklch(26.4% 0.0827 35.1)",
+          "oklch(37.9% 0.0827 35.1)",
+          "oklch(49.3% 0.0827 35.1)",
+          "oklch(60.7% 0.0827 35.1)",
+          "oklch(72.1% 0.0827 35.1)",
+          "oklch(83.6% 0.0827 35.1)",
+          "oklch(95% 0.0827 35.1)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "lake-accent": {
+        "role": "primary",
+        "displayName": "Lake Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0727 235.7)",
+          "oklch(26.4% 0.0727 235.7)",
+          "oklch(37.9% 0.0727 235.7)",
+          "oklch(49.3% 0.0727 235.7)",
+          "oklch(60.7% 0.0727 235.7)",
+          "oklch(72.1% 0.0727 235.7)",
+          "oklch(83.6% 0.0727 235.7)",
+          "oklch(95% 0.0727 235.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "lake-accent-hover": {
+        "role": "primary",
+        "displayName": "Lake Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0590 236.9)",
+          "oklch(26.4% 0.0590 236.9)",
+          "oklch(37.9% 0.0590 236.9)",
+          "oklch(49.3% 0.0590 236.9)",
+          "oklch(60.7% 0.0590 236.9)",
+          "oklch(72.1% 0.0590 236.9)",
+          "oklch(83.6% 0.0590 236.9)",
+          "oklch(95% 0.0590 236.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-clay-accent": {
+        "role": "primary",
+        "displayName": "Dark Clay Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0781 40.7)",
+          "oklch(26.4% 0.0781 40.7)",
+          "oklch(37.9% 0.0781 40.7)",
+          "oklch(49.3% 0.0781 40.7)",
+          "oklch(60.7% 0.0781 40.7)",
+          "oklch(72.1% 0.0781 40.7)",
+          "oklch(83.6% 0.0781 40.7)",
+          "oklch(95% 0.0781 40.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-clay-accent-hover": {
+        "role": "primary",
+        "displayName": "Dark Clay Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0522 43.7)",
+          "oklch(26.4% 0.0522 43.7)",
+          "oklch(37.9% 0.0522 43.7)",
+          "oklch(49.3% 0.0522 43.7)",
+          "oklch(60.7% 0.0522 43.7)",
+          "oklch(72.1% 0.0522 43.7)",
+          "oklch(83.6% 0.0522 43.7)",
+          "oklch(95% 0.0522 43.7)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-lake-accent": {
+        "role": "primary",
+        "displayName": "Dark Lake Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0596 228.9)",
+          "oklch(26.4% 0.0596 228.9)",
+          "oklch(37.9% 0.0596 228.9)",
+          "oklch(49.3% 0.0596 228.9)",
+          "oklch(60.7% 0.0596 228.9)",
+          "oklch(72.1% 0.0596 228.9)",
+          "oklch(83.6% 0.0596 228.9)",
+          "oklch(95% 0.0596 228.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "dark-lake-accent-hover": {
+        "role": "primary",
+        "displayName": "Dark Lake Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0419 227.9)",
+          "oklch(26.4% 0.0419 227.9)",
+          "oklch(37.9% 0.0419 227.9)",
+          "oklch(49.3% 0.0419 227.9)",
+          "oklch(60.7% 0.0419 227.9)",
+          "oklch(72.1% 0.0419 227.9)",
+          "oklch(83.6% 0.0419 227.9)",
+          "oklch(95% 0.0419 227.9)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "auth-story": {
+        "role": "primary",
+        "displayName": "Auth Story",
+        "tonalRamp": [
+          "oklch(15% 0.0659 168.8)",
+          "oklch(26.4% 0.0659 168.8)",
+          "oklch(37.9% 0.0659 168.8)",
+          "oklch(49.3% 0.0659 168.8)",
+          "oklch(60.7% 0.0659 168.8)",
+          "oklch(72.1% 0.0659 168.8)",
+          "oklch(83.6% 0.0659 168.8)",
+          "oklch(95% 0.0659 168.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "auth-story-text": {
+        "role": "neutral",
+        "displayName": "Auth Story Text",
+        "tonalRamp": [
+          "oklch(15% 0.0159 110.6)",
+          "oklch(26.4% 0.0159 110.6)",
+          "oklch(37.9% 0.0159 110.6)",
+          "oklch(49.3% 0.0159 110.6)",
+          "oklch(60.7% 0.0159 110.6)",
+          "oklch(72.1% 0.0159 110.6)",
+          "oklch(83.6% 0.0159 110.6)",
+          "oklch(95% 0.0159 110.6)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "auth-story-secondary": {
+        "role": "neutral",
+        "displayName": "Auth Story Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0247 147.3)",
+          "oklch(26.4% 0.0247 147.3)",
+          "oklch(37.9% 0.0247 147.3)",
+          "oklch(49.3% 0.0247 147.3)",
+          "oklch(60.7% 0.0247 147.3)",
+          "oklch(72.1% 0.0247 147.3)",
+          "oklch(83.6% 0.0247 147.3)",
+          "oklch(95% 0.0247 147.3)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "auth-story-body": {
+        "role": "neutral",
+        "displayName": "Auth Story Body",
+        "tonalRamp": [
+          "oklch(15% 0.0205 145.4)",
+          "oklch(26.4% 0.0205 145.4)",
+          "oklch(37.9% 0.0205 145.4)",
+          "oklch(49.3% 0.0205 145.4)",
+          "oklch(60.7% 0.0205 145.4)",
+          "oklch(72.1% 0.0205 145.4)",
+          "oklch(83.6% 0.0205 145.4)",
+          "oklch(95% 0.0205 145.4)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      },
+      "modal-scrim": {
+        "role": "neutral",
+        "displayName": "Modal Scrim",
+        "tonalRamp": [
+          "oklch(15% 0.0187 164.8)",
+          "oklch(26.4% 0.0187 164.8)",
+          "oklch(37.9% 0.0187 164.8)",
+          "oklch(49.3% 0.0187 164.8)",
+          "oklch(60.7% 0.0187 164.8)",
+          "oklch(72.1% 0.0187 164.8)",
+          "oklch(83.6% 0.0187 164.8)",
+          "oklch(95% 0.0187 164.8)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp; not a shipped theme scale."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Authentication display",
+        "purpose": "Story headline only; mobile override 2.4rem."
+      },
+      "headline": {
+        "displayName": "Authentication form heading",
+        "purpose": "Form title; mobile override 1.6rem."
+      },
+      "title": {
+        "displayName": "Modal title",
+        "purpose": "Shared dialog heading."
+      },
+      "body": {
+        "displayName": "Interface body",
+        "purpose": "General interface copy."
+      },
+      "message": {
+        "displayName": "Message reading",
+        "purpose": "Body size with 1.6 leading."
+      },
+      "label": {
+        "displayName": "Field label",
+        "purpose": "Sentence-case semibold label."
+      },
+      "metadata": {
+        "displayName": "Supporting detail",
+        "purpose": "Timestamps and helper copy."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-sm",
+        "value": "0 2px 8px #162d1710",
+        "purpose": "Defined source token; not promoted as a default surface treatment."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 8px 24px #162d1718",
+        "purpose": "Toast elevation."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 24px 70px #162d1726",
+        "purpose": "Shared modal elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-fast",
+        "value": "160ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Control state transitions."
+      },
+      {
+        "name": "transition-normal",
+        "value": "240ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Layout and switch transitions."
+      },
+      {
+        "name": "transition-enter",
+        "value": "280ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Defined entrance token; shared scale helper is overridden to 240ms."
+      },
+      {
+        "name": "fade-helper",
+        "value": "200ms ease-out",
+        "purpose": "Final fade helper."
+      },
+      {
+        "name": "settle-helper",
+        "value": "240ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "8px settle helper."
+      },
+      {
+        "name": "scale-helper",
+        "value": "240ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Scale from .95."
+      },
+      {
+        "name": "auth-settle",
+        "value": "360ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Authentication form arrival."
+      },
+      {
+        "name": "reduced-motion",
+        "value": ".01ms",
+        "purpose": "OS preference or data-reduce-motion=true; one iteration and scroll-behavior:auto."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "auth-intermediate",
+        "value": "900px",
+        "query": "max-width"
+      },
+      {
+        "name": "mobile",
+        "value": "768px",
+        "query": "max-width"
+      },
+      {
+        "name": "campus-form-single-column",
+        "value": "540px",
+        "query": "max-width"
+      }
+    ],
+    "provenance": {
+      "mode": "scan",
+      "sources": [
+        "client/src/app/globals.css",
+        "client/src/app/layout.tsx",
+        "client/src/components/settings/VisualSettings.tsx",
+        "client/src/components/auth/AuthCard.tsx",
+        "client/src/components/ui/Modal.tsx",
+        "client/src/components/chat/ChatArea.tsx",
+        "client/src/components/campus/CampusTicketDrawer.tsx",
+        "PRODUCT.md"
+      ],
+      "authority": "Final code. Historical mockup is directional, not a pixel-approved specification.",
+      "limitations": "Source extraction only; no new browser verification. Legacy Badge semantic colours and Avatar inline colour/shadow rules differ from the semantic theme; they are not canonized. Synthesized tonal ramps are inspection aids, not theme tokens."
+    },
+    "themeMapping": {
+      "base": "Unprefixed color keys match CSS custom properties; exceptions auth-story*, modal-scrim are literal source roles.",
+      "dark": "dark-* keys replace matching base custom properties under :root[data-theme=dark].",
+      "accent": "clay-accent/lake-accent and their hover keys replace --accent/--accent-hover; dark combinations use dark-clay-* and dark-lake-*.",
+      "dynamic": "accent-light remains a color-mix referencing current --accent and --bg-secondary; alias gradient tokens resolve to --accent."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled shared action.",
+      "html": "<button class=\"ds-btn ds-primary\">New conversation</button>",
+      "css": ".ds-btn { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:var(--radius-md);font-family:var(--font-sans);font-size:.9rem;font-weight:600;border:1px solid transparent;cursor:pointer;transition:background-color var(--transition-fast);white-space:nowrap; } .ds-btn:focus-visible {outline:2px solid var(--accent);outline-offset:3px;} .ds-btn:active {transform:scale(.97);} .ds-btn:disabled {opacity:.48;cursor:not-allowed;transform:none;} .ds-primary {background:var(--accent);color:var(--on-accent);} .ds-primary:hover {background:var(--accent-hover);}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet bordered action.",
+      "html": "<button class=\"ds-btn ds-secondary\">Visual settings</button>",
+      "css": ".ds-btn { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:var(--radius-md);font-family:var(--font-sans);font-size:.9rem;font-weight:600;border:1px solid transparent;cursor:pointer;transition:background-color var(--transition-fast);white-space:nowrap; } .ds-btn:focus-visible {outline:2px solid var(--accent);outline-offset:3px;} .ds-btn:active {transform:scale(.97);} .ds-btn:disabled {opacity:.48;cursor:not-allowed;transform:none;} .ds-secondary {background:var(--bg-glass-card);color:var(--text-primary);border-color:var(--border-subtle);} .ds-secondary:hover {background:var(--bg-glass-hover);border-color:var(--border-medium);}"
+    },
+    {
+      "name": "Ghost button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low emphasis action.",
+      "html": "<button class=\"ds-btn ds-ghost\">Campus calendar</button>",
+      "css": ".ds-btn { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:var(--radius-md);font-family:var(--font-sans);font-size:.9rem;font-weight:600;border:1px solid transparent;cursor:pointer;transition:background-color var(--transition-fast);white-space:nowrap; } .ds-btn:focus-visible {outline:2px solid var(--accent);outline-offset:3px;} .ds-btn:active {transform:scale(.97);} .ds-btn:disabled {opacity:.48;cursor:not-allowed;transform:none;} .ds-ghost {background:transparent;color:var(--text-secondary);} .ds-ghost:hover {background:var(--bg-glass-hover);color:var(--text-primary);}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Shared clean field with accent focus.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-roll\">Roll number</label><input class=\"ds-field\" id=\"ds-roll\" placeholder=\"e.g. B26001\" />",
+      "css": ".ds-field-label {display:block;margin-bottom:6px;font-family:var(--font-sans);font-size:.867rem;font-weight:600;color:var(--text-secondary);} .ds-field {width:100%;padding:11px 14px;background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:8px;color:var(--text-primary);font-family:var(--font-sans);font-size:1rem;transition:background-color var(--transition-fast);} .ds-field::placeholder {color:var(--text-muted);} .ds-field:hover {border-color:var(--border-medium);} .ds-field:focus {outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}"
+    },
+    {
+      "name": "Sidebar tabs",
+      "kind": "nav",
+      "refersTo": "nav-tab",
+      "description": "Compact filters with a tinted selected state.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Conversation filters\"><button class=\"ds-tab\" aria-pressed=\"true\">All</button><button class=\"ds-tab\" aria-pressed=\"false\">Groups</button></nav>",
+      "css": ".ds-tabs {display:flex;gap:3px;flex-wrap:wrap;} .ds-tab {padding:6px 12px;border:0;border-radius:6px;min-height:34px;font-family:var(--font-sans);font-size:.8rem;font-weight:600;background:transparent;color:var(--text-secondary);cursor:pointer;transition:background-color var(--transition-fast);} .ds-tab[aria-pressed=true] {background:var(--accent-light);color:var(--accent);} .ds-tab:focus-visible {outline:2px solid var(--accent);outline-offset:3px;}"
+    },
+    {
+      "name": "Campus status",
+      "kind": "chip",
+      "refersTo": "campus-status",
+      "description": "Status label on a campus record.",
+      "html": "<span class=\"ds-status\">Open</span>",
+      "css": ".ds-status {display:inline-block;background:var(--accent-light);color:var(--accent);padding:3px 8px;border-radius:6px;font-family:var(--font-sans);font-size:.8rem;}"
+    },
+    {
+      "name": "Campus form container",
+      "kind": "card",
+      "refersTo": "campus-form",
+      "description": "Soft surface for campus forms.",
+      "html": "<section class=\"ds-campus-form\"><h4>Report an issue</h4><label>Title<input class=\"ds-campus-input\" placeholder=\"What happened?\" /></label></section>",
+      "css": ".ds-campus-form {display:flex;flex-direction:column;gap:16px;padding:20px;background:var(--bg-tertiary);border-radius:12px;font-family:var(--font-sans);color:var(--text-primary);} .ds-campus-form h4 {margin:0;font-size:1.067rem;font-weight:600;line-height:1.4;letter-spacing:-.02em;} .ds-campus-form label {display:flex;flex-direction:column;gap:8px;font-size:.867rem;color:var(--text-secondary);} .ds-campus-input {padding:11px 14px;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);font-family:var(--font-sans);font-size:1rem;} .ds-campus-input:hover {border-color:var(--border-medium);} .ds-campus-input:focus {outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}"
+    },
+    {
+      "name": "Sent message",
+      "kind": "custom",
+      "refersTo": "message-sent",
+      "description": "Outgoing reading surface and subordinate timestamp.",
+      "html": "<div class=\"ds-sent\">Same campus. A little more you.<div class=\"ds-meta\">Just now</div></div>",
+      "css": ".ds-sent {padding:11px 16px;border-radius:12px;border-bottom-right-radius:4px;background:var(--accent);color:var(--on-accent);font-family:var(--font-sans);font-size:1rem;line-height:1.6;word-break:break-word;} .ds-meta {display:flex;justify-content:flex-end;gap:4px;margin-top:4px;font-size:.8rem;color:inherit;opacity:.8;}"
+    },
+    {
+      "name": "Received message",
+      "kind": "custom",
+      "refersTo": "message-received",
+      "description": "Incoming reading surface.",
+      "html": "<div class=\"ds-received\">See you after class.<div class=\"ds-received-meta\">Just now</div></div>",
+      "css": ".ds-received {padding:11px 16px;border-radius:12px;border-bottom-left-radius:4px;background:var(--bubble-received);color:var(--text-primary);font-family:var(--font-sans);font-size:1rem;line-height:1.6;word-break:break-word;} .ds-received-meta {display:flex;justify-content:flex-end;margin-top:4px;font-size:.8rem;color:var(--text-muted);opacity:.8;}"
+    },
+    {
+      "name": "Preference tile",
+      "kind": "button",
+      "refersTo": "setting-option",
+      "description": "Selected option in Visual settings.",
+      "html": "<button class=\"ds-option\" aria-pressed=\"true\">Pine</button>",
+      "css": ".ds-option {display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;width:100%;border:1px solid var(--border-medium);border-radius:8px;background:var(--bg-secondary);color:var(--text-secondary);font-family:var(--font-sans);font-size:.867rem;cursor:pointer;transition:background-color var(--transition-fast),border-color var(--transition-fast);} .ds-option:hover {background:var(--bg-glass-hover);} .ds-option[aria-pressed=true] {background:var(--accent-light);border-color:var(--accent);color:var(--accent);} .ds-option:focus-visible {outline:2px solid var(--accent);outline-offset:3px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus Paper",
+    "overview": "Campus Paper describes the implemented world: warm paper surfaces, pine ink and a locally bundled humanist sans serif. The palette gives conversations a calm reading ground, with accent colour reserved for sending, selection and focused interaction.\n\nThe same surface and control vocabulary carries through authentication, chat and campus tools. Density and type size are adjustable; light, dark and system appearance share semantic tokens. This record describes the final code, not a pixel specification inferred from the historical mockup.",
+    "keyCharacteristics": [
+      "Warm paper surfaces and pine ink, with Clay and Lake accent choices.",
+      "DM Sans throughout, with moderate headings and generous message leading.",
+      "Flat everyday surfaces; lifted dialogs and toasts.",
+      "Immediate visual preferences and device-aware reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "Semantic Accent",
+        "body": "Use accent with on-accent for filled actions; use accent-light with accent for selection.",
+        "section": "colors"
+      },
+      {
+        "name": "Reading First",
+        "body": "Message text uses the body size with more generous leading; metadata stays smaller.",
+        "section": "typography"
+      },
+      {
+        "name": "Quiet Surface",
+        "body": "Keep daily conversation surfaces flat; reserve structural shadows for dialogs and toasts.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use semantic CSS variables so dark appearance and accent preferences propagate.",
+      "Do keep messages at the reading size and leading, with metadata visibly subordinate.",
+      "Do preserve focus, selected state and reduced-motion treatments when extending controls.",
+      "Do reuse the shared modal and campus record/form patterns."
+    ],
+    "donts": [
+      "Don't replace semantic accent text with hardcoded white; use on-accent for filled actions and sent messages.",
+      "Don't copy an earlier CSS declaration without checking the later cascade overrides.",
+      "Don't rely on hover to expose message actions on touch screens.",
+      "Don't treat sample campus records as live institutional data."
+    ]
+  }
+}

@@ -15,24 +15,24 @@ const VARIANTS = {
     border: '1px solid var(--accent-light)',
   },
   success: {
-    bg: 'rgba(16, 185, 129, 0.18)',
-    color: '#6ee7b7',
-    border: '1px solid rgba(16, 185, 129, 0.35)',
+    bg: 'var(--success-light)',
+    color: 'var(--success)',
+    border: '1px solid var(--success-light)',
   },
   warning: {
-    bg: 'rgba(245, 158, 11, 0.18)',
-    color: '#fcd34d',
-    border: '1px solid rgba(245, 158, 11, 0.35)',
+    bg: 'var(--warning-light)',
+    color: 'var(--warning)',
+    border: '1px solid var(--warning-light)',
   },
   danger: {
-    bg: 'rgba(244, 63, 94, 0.18)',
-    color: '#fda4af',
-    border: '1px solid rgba(244, 63, 94, 0.35)',
+    bg: 'var(--danger-light)',
+    color: 'var(--danger)',
+    border: '1px solid var(--danger-light)',
   },
   neutral: {
-    bg: 'var(--border-subtle)',
-    color: '#94a3b8',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
+    bg: 'var(--bg-tertiary)',
+    color: 'var(--text-secondary)',
+    border: '1px solid var(--border-subtle)',
   },
 };
 

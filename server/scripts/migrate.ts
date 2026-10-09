@@ -19,8 +19,9 @@ try {
     await client.query('insert into supabase_migrations.schema_migrations(version,name,statements) values($1,$2,$3)', [version, file.replace(/^\d+_/, '').replace(/\.sql$/, ''), [sql]]);
     console.log(`Applied ${file}`);
   }
+  await client.query("NOTIFY pgrst, 'reload schema'");
   await client.query('commit');
-  console.log('Database migrations are up to date.');
+  console.log('Database migrations are up to date and PostgREST schema reloaded.');
 } catch (error) {
   await client.query('rollback').catch(() => {});
   // Do not log connection strings or passwords.

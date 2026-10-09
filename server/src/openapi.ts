@@ -5,6 +5,14 @@ const pageLimit = { type: 'integer', minimum: 1, maximum: 100, default: 50 };
 function object(properties: Record<string, unknown>, required: string[] = []) { return { type: 'object', additionalProperties: false, properties, required }; }
 type Route = { method: string; path: string; summary: string; body?: unknown; query?: Record<string, unknown>; status?: number; public?: boolean; multipart?: boolean };
 const routes: Route[] = [
+  { method:'get',path:'/api/campus/events',summary:'Persistent campus calendar, ordered by date and time',public:true,query:{venue:text,category:text} },
+  { method:'post',path:'/api/campus/events',summary:'Create an event for an assigned organizer; overlapping bookings return conflict',status:201,body:object({title:{...text,minLength:3,maxLength:120},description:text,category:{enum:['Club Workshop','Fest Event','Sports Tournament','Placement & Tech Talk','General']},organizer:text,venue:{enum:['Auditorium A1/A2','A13 Hall','South Campus Grounds','SCEE Seminar Hall','Sports Complex','Other']},date:{...text,format:'date'},startTime:{...text,pattern:'^[0-2][0-9]:[0-5][0-9]$'},endTime:text},['title','category','organizer','venue','date','startTime','endTime']) },
+  { method:'patch',path:'/api/campus/events/{id}',summary:'Edit or reschedule an assigned organizer’s event; send the complete event fields' },
+  { method:'patch',path:'/api/campus/events/{id}/status',summary:'Change event status; approval checks venue availability',body:object({status:{enum:['pending','approved','conflict','completed','cancelled']}},['status']) },
+  { method:'get',path:'/api/campus/tickets',summary:'Persistent maintenance reports visible to your residence or managed scope',query:{scope:{enum:['hostel','mess']},campus:{enum:['North','South']},status:text,cluster:text} },
+  { method:'post',path:'/api/campus/tickets',summary:'Report an issue in an accessible hostel or mess',status:201,body:object({title:{...text,minLength:5,maxLength:160},description:text,scope:{enum:['hostel','mess']},category:text,campus:{enum:['North','South']},clusterOrMess:text,specificLocation:text},['title','scope','category','campus','clusterOrMess','specificLocation']) },
+  { method:'post',path:'/api/campus/tickets/{id}/upvote',summary:'Toggle your vote; returns ticket and hasUpvoted' },
+  { method:'patch',path:'/api/campus/tickets/{id}/status',summary:'Assigned caretakers and mess managers update status with saved history',body:object({status:{enum:['Reported','Under Investigation','Resolved by Warden/Caretaker']}},['status']) },
   { method:'get',path:'/health',summary:'Process liveness',public:true },
   { method:'get',path:'/ready',summary:'Supabase schema and Data API readiness',public:true },
   { method:'post',path:'/api/auth/register',summary:'Register; session may be null until email confirmation',public:true,status:201,body:object({email:{type:'string',format:'email'},password:{type:'string',minLength:8,maxLength:128},display_name:{type:'string',minLength:1,maxLength:80}},['email','password','display_name']) },
@@ -15,6 +23,9 @@ const routes: Route[] = [
   { method:'get',path:'/api/users',summary:'Search username prefixes with cursor pagination',query:{q:text,after_id:uuid,limit:pageLimit} },
   { method:'get',path:'/api/users/{userId}',summary:'Public profile of a registered user' },
   { method:'patch',path:'/api/users/me',summary:'Update your username, display name or avatar key',body:object({username:{type:'string',pattern:'^[a-z0-9_]{3,32}$'},display_name:{type:'string',minLength:1,maxLength:80},avatar_key:{type:['string','null'],maxLength:512}}) },
+  { method:'post',path:'/api/users/me/avatar',summary:'Upload a profile picture',multipart:true,body:object({file:{type:'string',format:'binary'}},['file']) },
+  { method:'delete',path:'/api/users/me/avatar',summary:'Remove your profile picture' },
+  { method:'get',path:'/api/users/{userId}/avatar',summary:'Get a user profile picture',public:true },
   { method:'get',path:'/api/conversations',summary:'Your conversations ordered by latest activity',query:{cursor:text,limit:pageLimit} },
   { method:'post',path:'/api/conversations/direct',summary:'Create or retrieve a direct conversation',body:object({user_id:uuid},['user_id']) },
   { method:'post',path:'/api/conversations/groups',summary:'Create a group with the caller as owner',status:201,body:object({title:{type:'string',minLength:1,maxLength:120},member_ids:{type:'array',items:uuid,minItems:1,maxItems:99}},['title','member_ids']) },
@@ -31,10 +42,13 @@ const routes: Route[] = [
   { method:'post',path:'/api/messages/{messageId}/reactions',summary:'Add a reaction idempotently',body:object({emoji:{type:'string',minLength:1,maxLength:32}},['emoji']) },
   { method:'delete',path:'/api/messages/{messageId}/reactions',summary:'Remove your reaction',body:object({emoji:{type:'string',minLength:1,maxLength:32}},['emoji']) },
   { method:'post',path:'/api/conversations/{conversationId}/attachments',summary:'Upload a private draft file; link its ID when sending a message',status:201,multipart:true,body:object({file:{type:'string',format:'binary'}},['file']) },
+  { method:'get',path:'/api/conversations/{conversationId}/attachments',summary:'List sent attachments in a conversation' },
   { method:'get',path:'/api/attachments/{attachmentId}/url',summary:'Get a private, 60-second download URL' },
   { method:'delete',path:'/api/attachments/{attachmentId}',summary:'Delete your unattached upload',status:204 },
 ];
 const paths: Record<string, Record<string, unknown>> = {};
+const calendarCreate = routes.find(route => route.method === 'post' && route.path === '/api/campus/events')!;
+routes.find(route => route.method === 'patch' && route.path === '/api/campus/events/{id}')!.body = calendarCreate.body;
 for (const route of routes) {
   const parameters = [...Array.from(route.path.matchAll(/\{([^}]+)\}/g), m => ({name:m[1],in:'path',required:true,schema:uuid})), ...Object.entries(route.query ?? {}).map(([name,schema]) => ({name,in:'query',required:name==='q' && route.path.endsWith('/search'),schema}))];
   const status=String(route.status ?? 200);

@@ -1,0 +1,22 @@
+[
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "E:\\chat-utkarsh\\client\\src\\app\\globals.css",
+    "line": 174,
+    "snippet": "animation: var(--transition-bounce)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "E:\\chat-utkarsh\\client\\src\\app\\globals.css",
+    "line": 860,
+    "snippet": "animation: typingBounce"
+  }
+]

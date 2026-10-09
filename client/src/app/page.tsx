@@ -1,21 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ToastProvider, useToast } from '@/components/ui/Toast';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { ChatProvider, useChat } from '@/context/ChatContext';
 import { AuthCard } from '@/components/auth/AuthCard';
-import { Sidebar } from '@/components/sidebar/Sidebar';
+import { CampusTicketDrawer } from '@/components/campus/CampusTicketDrawer';
+import { GymkhanaCalendarModal } from '@/components/campus/GymkhanaCalendarModal';
+import { MessMenuDrawer } from '@/components/campus/MessMenuDrawer';
+import { MoodleDrawer } from '@/components/campus/MoodleDrawer';
+import { ResidenceOnboardingModal } from '@/components/campus/ResidenceOnboardingModal';
 import { ChatArea } from '@/components/chat/ChatArea';
 import { NewConversationModal } from '@/components/sidebar/NewConversationModal';
-import { GymkhanaCalendarModal } from '@/components/campus/GymkhanaCalendarModal';
-import { CampusTicketDrawer } from '@/components/campus/CampusTicketDrawer';
-import { MoodleDrawer } from '@/components/campus/MoodleDrawer';
-import { MessMenuDrawer } from '@/components/campus/MessMenuDrawer';
+import { Sidebar } from '@/components/sidebar/Sidebar';
+import { VisualSettingsProvider } from '@/components/settings/VisualSettings';
+import { ToastProvider } from '@/components/ui/Toast';
+import { AuthProvider,useAuth } from '@/context/AuthContext';
+import { ChatProvider,useChat } from '@/context/ChatContext';
 import { MessageSquare } from 'lucide-react';
+import { useState } from 'react';
 
 function ChatAppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, profile } = useAuth();
   const { activeConversationId, selectConversation, sendMessage } = useChat();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(true);
@@ -99,7 +101,7 @@ function ChatAppContent() {
     setIsMoodleDrawerOpen(true);
   };
 
-  const handleOpenMessMenu = (slug?: string, _isAdmin?: boolean) => {
+  const handleOpenMessMenu = (slug?: string) => {
     setMessSlug(slug || 'pine-mess');
     setIsMessDrawerOpen(true);
   };
@@ -139,6 +141,10 @@ function ChatAppContent() {
       />
 
       {/* Modals & Drawers */}
+      <ResidenceOnboardingModal
+        isOpen={Boolean(isAuthenticated && profile && !profile.chat_only && (!profile.hostel || !profile.mess || !profile.branch || !profile.hostel_block))}
+      />
+
       <NewConversationModal
         isOpen={isNewChatModalOpen}
         onClose={() => setIsNewChatModalOpen(false)}
@@ -172,6 +178,7 @@ function ChatAppContent() {
         onClose={() => setIsMessDrawerOpen(false)}
         defaultMessSlug={messSlug}
         onOpenTickets={(messName) => {
+          setIsMessDrawerOpen(false);
           setTicketScope('mess');
           setTicketClusterOrMess(messName);
           setIsTicketDrawerOpen(true);
@@ -185,9 +192,11 @@ export default function Home() {
   return (
     <ToastProvider>
       <AuthProvider>
+        <VisualSettingsProvider>
         <ChatProvider>
           <ChatAppContent />
         </ChatProvider>
+        </VisualSettingsProvider>
       </AuthProvider>
     </ToastProvider>
   );

@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
-import { api } from '@/lib/api';
-import { useChat } from '@/context/ChatContext';
+import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
-import { Profile } from '@/types/chat';
+import { useChat } from '@/context/ChatContext';
+import { api } from '@/lib/api';
 import { searchCampusDirectory } from '@/lib/campus';
+import { Profile } from '@/types/chat';
 import {
-  Search,
-  Check,
-  Users,
-  MessageSquarePlus,
-  GraduationCap,
-  Building2,
+Check,
+MessageSquarePlus,
+Search
 } from 'lucide-react';
+import React,{ useEffect,useState } from 'react';
 
 interface NewConversationModalProps {
   isOpen: boolean;

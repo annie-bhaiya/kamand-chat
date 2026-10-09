@@ -1,59 +1,70 @@
 import {
-  ApiResponse,
-  AuthSession,
-  Conversation,
-  Message,
-  Profile,
-  Attachment,
-  CampusRoom,
-  CampusEvent,
-  CampusTicket,
-  MoodleAssignment,
-  MessDayMenu,
+ApiResponse,
+Attachment,
+AuthSession,
+CampusEvent,
+CampusRoom,
+CampusTicket,
+Conversation,
+Message,
+MessDayMenu,
+MoodleAssignment,
+Profile,
 } from '@/types/chat';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-class ApiClient {
+export class ApiClient {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private refreshPromise: Promise<string | null> | null = null;
+  private sessionVersion = 0;
+
+  private readToken(key: string) {
+    try { return typeof window === 'undefined' ? null : localStorage.getItem(key); }
+    catch { return null; }
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
-      this.accessToken = localStorage.getItem('fc_access_token');
-      this.refreshToken = localStorage.getItem('fc_refresh_token');
+      this.accessToken = this.readToken('fc_access_token');
+      this.refreshToken = this.readToken('fc_refresh_token');
     }
   }
 
   setSession(session: { access_token: string; refresh_token: string } | null) {
+    this.sessionVersion += 1;
     if (session) {
       this.accessToken = session.access_token;
       this.refreshToken = session.refresh_token;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('fc_access_token', session.access_token);
-        localStorage.setItem('fc_refresh_token', session.refresh_token);
+        try {
+          localStorage.setItem('fc_access_token', session.access_token);
+          localStorage.setItem('fc_refresh_token', session.refresh_token);
+        } catch { /* The session remains usable in memory when browser storage is blocked. */ }
       }
     } else {
       this.accessToken = null;
       this.refreshToken = null;
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('fc_access_token');
-        localStorage.removeItem('fc_refresh_token');
+        try {
+          localStorage.removeItem('fc_access_token');
+          localStorage.removeItem('fc_refresh_token');
+        } catch { /* Browser storage may be unavailable. */ }
       }
     }
   }
 
   getAccessToken(): string | null {
     if (!this.accessToken && typeof window !== 'undefined') {
-      this.accessToken = localStorage.getItem('fc_access_token');
+      this.accessToken = this.readToken('fc_access_token');
     }
     return this.accessToken;
   }
 
   getRefreshToken(): string | null {
     if (!this.refreshToken && typeof window !== 'undefined') {
-      this.refreshToken = localStorage.getItem('fc_refresh_token');
+      this.refreshToken = this.readToken('fc_refresh_token');
     }
     return this.refreshToken;
   }
@@ -67,6 +78,7 @@ class ApiClient {
     if (!currentRefresh) return null;
 
     if (this.refreshPromise) return this.refreshPromise;
+    const version = this.sessionVersion;
 
     this.refreshPromise = (async () => {
       try {
@@ -74,20 +86,25 @@ class ApiClient {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: currentRefresh }),
+          signal: AbortSignal.timeout(15000),
         });
 
         if (!response.ok) {
-          this.setSession(null);
+          if ((response.status === 400 || response.status === 401) && version === this.sessionVersion) {
+            this.setSession(null);
+            if (typeof window !== 'undefined') window.dispatchEvent(new Event('kamand:session-expired'));
+          }
           return null;
         }
 
         const json = await response.json();
         const data = json.data;
-        if (data && data.session) {
+        if (data && data.session && version === this.sessionVersion) {
           this.setSession({
             access_token: data.session.access_token,
             refresh_token: data.session.refresh_token,
           });
+          if (typeof window !== 'undefined') window.dispatchEvent(new Event('kamand:session-refreshed'));
           return data.session.access_token;
         }
         return null;
@@ -184,6 +201,7 @@ class ApiClient {
   }
 
   async register(input: { email: string; password: string; display_name: string }) {
+    const version = ++this.sessionVersion;
     const res = await this.request<{
       user: AuthSession['user'];
       session: AuthSession | null;
@@ -192,11 +210,15 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(input),
     });
-    if (res.data?.session) this.setSession(res.data.session);
+    if (res.data?.session) {
+      if (version !== this.sessionVersion) throw new Error('Sign-in was cancelled.');
+      this.setSession(res.data.session);
+    }
     return res;
   }
 
   async login(input: { email: string; password: string; display_name?: string }) {
+    const version = ++this.sessionVersion;
     const res = await this.request<{
       user: AuthSession['user'];
       session: AuthSession | null;
@@ -207,6 +229,7 @@ class ApiClient {
       body: JSON.stringify(input),
     });
     if (res.data?.session) {
+      if (version !== this.sessionVersion) throw new Error('Sign-in was cancelled.');
       this.setSession({
         access_token: res.data.session.access_token,
         refresh_token: res.data.session.refresh_token,
@@ -233,14 +256,15 @@ class ApiClient {
   }
 
   async logout(refreshToken: string) {
-    try {
-      await this.request<void>('/api/auth/logout', {
-        method: 'POST',
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-    } finally {
-      this.setSession(null);
-    }
+    const token = this.getAccessToken();
+    this.setSession(null);
+    // Capture the old authorization before clearing locally. A delayed logout response
+    // must not clear a newer sign-in, and a pending refresh cannot restore this session.
+    await this.request<void>('/api/auth/logout', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
   }
 
   async getMe() {
@@ -267,10 +291,30 @@ class ApiClient {
     username?: string;
     display_name?: string;
     avatar_key?: string | null;
+    hostel?: string | null;
+    hostel_block?: string | null;
+    branch?: string | null;
+    mess?: string | null;
+    chat_only?: boolean;
   }) {
     return this.request<Profile>('/api/users/me', {
       method: 'PATCH',
       body: JSON.stringify(input),
+    });
+  }
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request<Profile>('/api/users/me/avatar', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async deleteAvatar() {
+    return this.request<Profile>('/api/users/me/avatar', {
+      method: 'DELETE',
     });
   }
 
@@ -420,6 +464,16 @@ class ApiClient {
     });
   }
 
+  async getConversationAttachments(conversationId: string) {
+    return this.request<Attachment[]>(
+      `/api/conversations/${conversationId}/attachments`
+    );
+  }
+
+  async getUserProfile(userId: string) {
+    return this.request<Profile>(`/api/users/${userId}`);
+  }
+
   // --- Campus Scoped Rooms API ---
   async getCampusRooms(category?: string, campus?: string) {
     const params = new URLSearchParams();
@@ -483,6 +537,10 @@ class ApiClient {
     });
   }
 
+  async updateCampusEvent(id: string, input: Parameters<ApiClient['createCampusEvent']>[0]) {
+    return this.request<CampusEvent>(`/api/campus/events/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+  }
+
   // --- Hostels & Messes Tickets API ---
   async getCampusTickets(options: {
     scope?: string;
@@ -534,7 +592,7 @@ class ApiClient {
     return this.request<{
       courseCode: string;
       moodleHost: string;
-      lastSynced: string;
+      lastSynced: string | null;
       assignments: MoodleAssignment[];
     }>(`/api/campus/moodle/${courseCode}`);
   }

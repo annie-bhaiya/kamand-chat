@@ -15,6 +15,8 @@ const calls: { method: string; path: string; authorization: string; body: any }[
 let upstream: Server, http: Server, app: ReturnType<typeof createApp>['app'];
 let realtime: ReturnType<typeof attachRealtime>;
 let url: string;
+let accountLookupUnavailable = false;
+let savedAvatarKey: string | null = null;
 const sockets: Socket[] = [];
 
 before(async () => {
@@ -23,7 +25,10 @@ before(async () => {
   upstream = createServer(async (req, res) => {
     let text = '';
     for await (const chunk of req) text += chunk;
-    const body = text ? JSON.parse(text) : null;
+    let body: any = null;
+    if (text) {
+      try { body = JSON.parse(text); } catch { body = text; }
+    }
     const path = req.url ?? '';
     const authorization = String(req.headers.authorization ?? '');
     calls.push({ method: req.method ?? '', path, authorization, body });
@@ -34,8 +39,27 @@ before(async () => {
     }
     if (path === '/rest/v1/rpc/chat_health') { res.end(JSON.stringify('ok')); return; }
     if (path === '/rest/v1/rpc/session_is_active') { res.end('true'); return; }
-    if (path === '/rest/v1/rpc/check_user_exists') { res.end(JSON.stringify({ exists: body?.p_email === 'alice@example.com', display_name: 'Alice' })); return; }
-    if (path.startsWith('/rest/v1/profiles')) { res.end(JSON.stringify({ id: user, username: 'alice', display_name: 'Alice' })); return; }
+    if (path === '/rest/v1/rpc/check_user_exists') {
+      if (accountLookupUnavailable) { res.statusCode = 503; res.end(JSON.stringify({ message: 'Unavailable' })); return; }
+      res.end(JSON.stringify({ exists: body?.p_email === 'alice@example.com', display_name: 'Alice' })); return;
+    }
+    if (path.startsWith('/rest/v1/profiles')) {
+      if (body && typeof body === 'object' && 'avatar_key' in body) {
+        savedAvatarKey = body.avatar_key;
+      }
+      res.end(JSON.stringify({ id: user, username: 'alice', display_name: 'Alice', avatar_key: savedAvatarKey }));
+      return;
+    }
+    if (path.startsWith('/storage/v1/object/avatars') || path.startsWith('/storage/v1/object/public/avatars')) {
+      if (req.method === 'DELETE') {
+        savedAvatarKey = null;
+        res.end(JSON.stringify([{ name: 'avatar.png' }]));
+        return;
+      }
+      res.end(JSON.stringify({ Key: `avatars/${user}/avatar.png`, Id: `avatars/${user}/avatar.png` }));
+      return;
+    }
+    if (path.startsWith('/rest/v1/attachments')) { res.end(JSON.stringify([])); return; }
     if (path.startsWith('/rest/v1/conversations')) {
       const row={ id: conversationId, type: 'direct', last_activity_at: '2026-10-09T00:00:00+00:00' };
       res.end(JSON.stringify(new URL(path,'http://fixture').searchParams.has('limit')?[row]:row)); return;
@@ -111,6 +135,14 @@ test('login auto-detects non-existent user and creates account with confirmation
   const call = calls.findLast(c => c.path === '/auth/v1/signup');
   assert.equal(call?.body.data.display_name, 'New Student');
 });
+test('a failed account lookup never creates a new account', async () => {
+  const signupsBefore = calls.filter(call => call.path === '/auth/v1/signup').length;
+  accountLookupUnavailable = true;
+  try {
+    await request(app).post('/api/auth/login').send({ email: 'alice@example.com', password: 'StrongPass123!' }).expect(503);
+    assert.equal(calls.filter(call => call.path === '/auth/v1/signup').length, signupsBefore);
+  } finally { accountLookupUnavailable = false; }
+});
 test('validation rejects forged sender IDs, bad UUIDs, empty messages and conflicting history cursors', async () => {
   await request(app).post(`/api/conversations/${conversationId}/messages`).set('Authorization',`Bearer ${token}`).send({ client_message_id:randomUUID(), body:'hello', sender_id:other }).expect(400);
   await request(app).post('/api/conversations/not-a-uuid/messages').set('Authorization',`Bearer ${token}`).send({ client_message_id:randomUUID(),body:'hello' }).expect(400);
@@ -165,4 +197,36 @@ test('authenticated Socket.IO receives persisted messages and typing events', as
   assert.equal(ack.ok,true);
   assert.equal((await typing).user_id,user);
   socket.disconnect();
+});
+test('upload, retrieve, and remove profile avatar works', async () => {
+  const pngBuffer = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+    0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41,
+    0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
+    0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+    0x42, 0x60, 0x82,
+  ]);
+  const uploadRes = await request(app)
+    .post('/api/users/me/avatar')
+    .set('Authorization', `Bearer ${token}`)
+    .attach('file', pngBuffer, 'avatar.png')
+    .expect(200);
+  assert.ok(uploadRes.body.data.avatar_key);
+  assert.ok(uploadRes.body.data.avatar_key.includes(`${user}/avatar.png`));
+  const getRes = await request(app)
+    .get(`/api/users/${user}/avatar`)
+    .expect(302);
+  assert.ok(getRes.headers.location?.includes(`${user}/avatar.png`));
+  const deleteRes = await request(app)
+    .delete('/api/users/me/avatar')
+    .set('Authorization', `Bearer ${token}`)
+    .expect(200);
+  assert.equal(deleteRes.body.data.avatar_key, null);
+  await request(app)
+    .get(`/api/users/${user}/avatar`)
+    .expect(404);
 });

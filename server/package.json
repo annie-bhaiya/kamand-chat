@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/dev.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.check.json",
@@ -18,7 +18,8 @@
     "db:status": "supabase status",
     "db:push": "supabase db push",
     "db:apply": "tsx scripts/migrate.ts",
-    "db:check": "tsx scripts/check.ts"
+    "db:check": "tsx scripts/check.ts",
+    "seed:simulation": "tsx scripts/seed-simulation.ts"
   },
   "dependencies": {
     "@socket.io/redis-adapter": "8.3.0",

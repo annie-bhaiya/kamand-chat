@@ -23,7 +23,7 @@ before(async () => {
   await db.exec(`
     create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create schema storage;
-    create table auth.users(id uuid primary key,raw_user_meta_data jsonb default '{}');
+    create table auth.users(id uuid primary key,raw_user_meta_data jsonb default '{}',raw_app_meta_data jsonb default '{}',email text,email_confirmed_at timestamptz);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
     create function auth.jwt() returns jsonb language sql stable as $$ select nullif(current_setting('request.jwt.claims',true),'')::jsonb $$;
     create function auth.uid() returns uuid language sql stable as $$ select (auth.jwt()->>'sub')::uuid $$;
@@ -46,7 +46,7 @@ after(async () => { await db.close(); });
 
 test('migration enables RLS on every application table and exposes no public SECURITY DEFINER functions', async () => {
   const tables = await db.query<{ relrowsecurity: boolean }>("select relrowsecurity from pg_class c join pg_namespace n on c.relnamespace=n.oid where n.nspname='public' and c.relkind='r'");
-  assert.equal(tables.rows.length, 7);
+  assert.equal(tables.rows.length, 12);
   assert.ok(tables.rows.every(x => x.relrowsecurity));
   const functions = await db.query("select p.proname from pg_proc p join pg_namespace n on p.pronamespace=n.oid where n.nspname='public' and p.prosecdef");
   assert.equal(functions.rows.length, 0);
@@ -172,6 +172,106 @@ test('soft deletion keeps sequence history, removes body/search text and reactio
   assert.equal((await asUser(bob, 'select * from public.message_reactions where message_id=$1', [message])).length, 0);
   await assert.rejects(rpc(alice, 'select public.edit_message($1,$2) as data', [message, 'Restore']), /Message was deleted/);
 });
+test('campus joining cannot discover or enter a private group by its title', async () => {
+  const privateGroup = await rpc(alice, 'select public.create_group_conversation($1,$2) as data', ['#KamandPrompt', [bob]]);
+  const campus = await rpc(eve, 'select public.join_or_create_campus_room($1,$2) as data', ['kamandprompt', '#KamandPrompt']);
+  assert.notEqual(campus.id, privateGroup.id);
+  assert.equal((await asUser(eve, 'select * from public.conversations where id=$1', [privateGroup.id])).length, 0);
+  const joined = await rpc(bob, 'select public.join_or_create_campus_room($1,$2) as data', ['kamandprompt', '#KamandPrompt']);
+  assert.equal(joined.id, campus.id);
+  assert.equal((await asUser(bob, 'select * from public.conversation_members where conversation_id=$1', [campus.id])).length, 2);
+});
+test('campus RPC rejects forged catalogue entries and protects its internal registry', async () => {
+  await assert.rejects(rpc(eve, 'select public.join_or_create_campus_room($1,$2) as data', ['private', 'Study group']), /Unknown campus room/);
+  await assert.rejects(rpc(eve, 'select public.join_or_create_campus_room($1,$2) as data', ['kamandprompt', 'Study group']), /Unknown campus room/);
+  await assert.rejects(asUser(eve, 'select * from private.campus_rooms'), /permission denied/);
+});
+test('campus management uses trusted room assignments and protects managers', async () => {
+  const campus = await rpc(alice, 'select public.join_or_create_campus_room($1,$2) as data', ['robotronics', '#Robotronics']);
+  assert.equal(campus.campus_room_slug, 'robotronics');
+  await assert.rejects(rpc(alice, 'select public.rename_group($1,$2) as data', [campus.id, 'Hijacked room']), /Group owner required/);
+  await db.query('update auth.users set raw_user_meta_data=$2 where id=$1', [eve, JSON.stringify({ campus_rooms: ['robotronics'] })]);
+  await rpc(eve, 'select public.join_or_create_campus_room($1,$2) as data', ['robotronics', '#Robotronics']);
+  await assert.rejects(rpc(eve, 'select public.change_group_member($1,$2,false) as data', [campus.id, bob]), /Group owner required/);
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, JSON.stringify({ campus_rooms: ['robotronics', 'pine-mess'] })]);
+  await rpc(bob, 'select public.join_or_create_campus_room($1,$2) as data', ['robotronics', '#Robotronics']);
+  await rpc(bob, 'select public.rename_group($1,$2) as data', [campus.id, 'Robotronics demo']);
+  await rpc(bob, 'select public.change_group_member($1,$2,false) as data', [campus.id, alice]);
+  await assert.rejects(rpc(alice, 'select public.change_group_member($1,$2,true) as data', [campus.id, bob]), /Group owner required/);
+  await assert.rejects(rpc(bob, 'select public.change_group_member($1,$2,true) as data', [campus.id, bob]), /owner must remain/);
+  await rpc(bob, 'select public.change_group_member($1,$2,true) as data', [campus.id, eve]);
+  assert.equal((await asUser(eve, 'select * from public.conversations where id=$1', [campus.id])).length, 0);
+  const another = await rpc(bob, 'select public.join_or_create_campus_room($1,$2) as data', ['yantrik', '#Yantrik']);
+  await assert.rejects(rpc(bob, 'select public.rename_group($1,$2) as data', [another.id, 'Wrong club']), /Group owner required/);
+});
+
+test('mess menus persist and RLS rejects students and other mess managers', async () => {
+  await asUser(bob, 'insert into public.mess_menus(room_slug,menu,updated_by) values($1,$2,$3)', ['pine-mess', JSON.stringify({ lunch: 'Demo lunch' }), bob]);
+  assert.equal((await asUser<{ menu: { lunch: string } }>(alice, "select menu from public.mess_menus where room_slug='pine-mess'"))[0]!.menu.lunch, 'Demo lunch');
+  await assert.rejects(asUser(alice, 'insert into public.mess_menus(room_slug,menu,updated_by) values($1,$2,$3)', ['oak-mess', '{}', alice]), /row-level security/);
+  await assert.rejects(asUser(bob, 'insert into public.mess_menus(room_slug,menu,updated_by) values($1,$2,$3)', ['oak-mess', '{}', bob]), /row-level security/);
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, '{}']);
+  const update = await asUser(bob, "update public.mess_menus set menu='{}' where room_slug='pine-mess' returning *");
+  assert.equal(update.length, 0);
+});
+
+test('calendar persists authorized event edits and prevents overlapping approvals', async () => {
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, JSON.stringify({ campus_rooms: ['kamandprompt'] })]);
+  const input = { roomSlug: 'kamandprompt', title: 'Database workshop', description: 'Persistent event', category: 'Club Workshop', venue: 'A13 Hall', date: '2026-12-01', startMinute: 600, endMinute: 660 };
+  const first = await rpc(bob, 'select public.save_campus_event($1) as data', [JSON.stringify(input)]);
+  assert.equal(first.status, 'approved'); assert.equal(first.canManage, true); assert.equal(first.createdBy, bob);
+  assert.equal(first.startTime, '10:00');
+  const conflict = await rpc(bob, 'select public.save_campus_event($1) as data', [JSON.stringify({ ...input, startMinute: 630, endMinute: 690 })]);
+  assert.equal(conflict.status, 'conflict');
+  assert.equal((await rpc(bob, 'select public.set_campus_event_status($1,$2) as data', [conflict.id, 'approved'])).status, 'conflict');
+  await assert.rejects(rpc(alice, 'select public.set_campus_event_status($1,$2) as data', [first.id, 'cancelled']), /privileges required/);
+  await assert.rejects(rpc(eve, 'select public.save_campus_event($1) as data', [JSON.stringify(input)]), /privileges required/);
+  await assert.rejects(asUser(bob, 'update public.campus_events set created_by=$1 where id=$2', [eve, first.id]), /permission denied/);
+  const adjacent = await rpc(bob, 'select public.save_campus_event($1) as data', [JSON.stringify({ ...input, startMinute: 660, endMinute: 720 })]);
+  assert.equal(adjacent.status, 'approved');
+  await rpc(bob, 'select public.set_campus_event_status($1,$2) as data', [first.id, 'cancelled']);
+  const rescheduled = await rpc(bob, 'select public.save_campus_event($1,$2) as data', [JSON.stringify({ ...input, title: 'Rescheduled workshop', startMinute: 600, endMinute: 650 }), conflict.id]);
+  assert.equal(rescheduled.status, 'approved');
+  const listed = await rpc(alice, 'select public.list_campus_events($1,$2) as data', ['A13 Hall', 'Club Workshop']);
+  assert.ok(listed.some((event: any) => event.id === conflict.id && event.title === 'Rescheduled workshop' && event.canManage === false));
+  await assert.rejects(rpc(bob, 'select public.save_campus_event($1) as data', [JSON.stringify({ ...input, endMinute: 500 })]), /check constraint/);
+  const publicEvents = await db.transaction(async tx => { await tx.exec('set local role anon'); return (await tx.query<{ data: any[] }>('select public.list_campus_events() as data')).rows[0]!.data; });
+  assert.equal(publicEvents.length, 3);
+});
+
+test('maintenance reports, private votes and status history respect residence scope', async () => {
+  await db.query("update public.profiles set hostel='Parashar',mess='Pine Mess',chat_only=false where id=$1", [alice]);
+  await db.query("update public.profiles set hostel='Suvalsar',mess='Oak Mess',chat_only=false where id=$1", [eve]);
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, JSON.stringify({ campus_rooms: ['p2-chat'] })]);
+  const input = { roomSlug: 'parashar-general', title: 'Repair the hallway light', category: 'Electrical', campus: 'North', specificLocation: 'P2 hallway' };
+  const ticket = await rpc(alice, 'select public.create_maintenance_ticket($1) as data', [JSON.stringify(input)]);
+  assert.equal(ticket.createdBy, alice); assert.equal(ticket.scope, 'hostel'); assert.equal(ticket.upvotes, 1);
+  assert.equal(ticket.history.length, 1); assert.deepEqual(ticket.upvotedBy, [alice]);
+  await assert.rejects(rpc(eve, 'select public.create_maintenance_ticket($1) as data', [JSON.stringify(input)]), /assigned residence/);
+  await assert.rejects(rpc(eve, 'select public.toggle_maintenance_vote($1) as data', [ticket.id]), /Scope access/);
+  assert.equal((await asUser(eve, 'select * from public.maintenance_tickets where id=$1', [ticket.id])).length, 0);
+  const vote = await rpc(bob, 'select public.toggle_maintenance_vote($1) as data', [ticket.id]);
+  assert.equal(vote.ticket.upvotes, 2); assert.equal(vote.hasUpvoted, true); assert.deepEqual(vote.ticket.upvotedBy, [bob]);
+  assert.equal((await asUser(bob, 'select * from public.maintenance_ticket_votes where ticket_id=$1', [ticket.id])).length, 1);
+  const unvote = await rpc(alice, 'select public.toggle_maintenance_vote($1) as data', [ticket.id]);
+  assert.equal(unvote.ticket.upvotes, 1); assert.equal(unvote.hasUpvoted, false);
+  await assert.rejects(rpc(alice, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Resolved by Warden/Caretaker']), /Assigned caretaker/);
+  await assert.rejects(asUser(alice, 'insert into public.maintenance_ticket_votes(ticket_id,user_id) values($1,$2)', [ticket.id, eve]), /permission denied/);
+  await rpc(bob, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Under Investigation']);
+  const resolved = await rpc(bob, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Resolved by Warden/Caretaker']);
+  assert.ok(resolved.resolvedAt); assert.equal(resolved.history.length, 3);
+  const unchanged = await rpc(bob, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Resolved by Warden/Caretaker']);
+  assert.equal(unchanged.history.length, 3);
+  const reopened = await rpc(bob, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Reported']);
+  assert.equal(reopened.resolvedAt, null); assert.equal(reopened.history.length, 4);
+  const list = await rpc(alice, 'select public.list_maintenance_tickets($1,$2,$3,$4) as data', ['hostel', 'North', 'Reported', 'Parashar']);
+  assert.equal(list.length, 1); assert.equal(list[0].canManage, false);
+  const hidden = await rpc(eve, 'select public.list_maintenance_tickets() as data');
+  assert.deepEqual(hidden, []);
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, '{}']);
+  await assert.rejects(rpc(bob, 'select public.set_maintenance_ticket_status($1,$2) as data', [ticket.id, 'Under Investigation']), /Assigned caretaker/);
+});
+
 test('revoked sessions cannot read profiles or send messages with an otherwise valid JWT', async () => {
   await db.query('delete from auth.sessions where user_id=$1', [alice]);
   assert.equal(await rpc(alice, 'select public.session_is_active() as data'), false);

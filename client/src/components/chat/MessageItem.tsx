@@ -1,31 +1,34 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Message, ConversationMember, Attachment } from '@/types/chat';
 import { Avatar } from '@/components/ui/Avatar';
-import { formatTime, formatFileSize, getMemberProfile } from '@/lib/utils';
-import { api } from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
+import { api } from '@/lib/api';
+import { formatFileSize,formatTime,getMemberProfile } from '@/lib/utils';
+import { Attachment,ConversationMember,Message,Profile } from '@/types/chat';
 import {
-  Smile,
-  Edit2,
-  Trash2,
   Check,
   CheckCheck,
-  FileText,
+  Copy,
   Download,
-  Play,
-  X,
+  Edit2,
+  FileText,
+  MoreHorizontal,
   Save,
+  Trash2,
+  X
 } from 'lucide-react';
+import Image from 'next/image';
+import React,{ useEffect,useId,useRef,useState } from 'react';
 
 interface MessageItemProps {
   message: Message;
   currentUserId: string;
   members: ConversationMember[];
-  onToggleReaction: (messageId: string, emoji: string) => void;
+  isConsecutive?: boolean;
+  onToggleReaction: (messageId: string, emoji: string) => Promise<void>;
   onEditMessage: (messageId: string, body: string) => Promise<void>;
   onDeleteMessage: (messageId: string) => Promise<void>;
+  onOpenUserProfile?: (userId: string, profile?: Partial<Profile> | null) => void;
 }
 
 const QUICK_EMOJIS = ['👍', '❤️', '🔥', '😂', '🎉', '🚀'];
@@ -34,14 +37,123 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   message,
   currentUserId,
   members,
+  isConsecutive = false,
   onToggleReaction,
   onEditMessage,
   onDeleteMessage,
+  onOpenUserProfile,
 }) => {
-  const { error } = useToast();
+  const { error, success } = useToast();
   const isMe = message.sender_id === currentUserId;
   const isDeleted = !!message.deleted_at;
 
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsId = useId();
+  const actionsTrigger = useRef<HTMLButtonElement>(null);
+  const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const isLongPressRef = useRef(false);
+
+  useEffect(() => () => {
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+  }, []);
+
+  // Close actions menu when clicking outside on desktop
+  useEffect(() => {
+    if (!actionsOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        actionsTrigger.current &&
+        !actionsTrigger.current.contains(e.target as Node)
+      ) {
+        const menuEl = document.getElementById(actionsId);
+        if (menuEl && !menuEl.contains(e.target as Node)) {
+          setActionsOpen(false);
+        }
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setActionsOpen(false);
+        actionsTrigger.current?.focus();
+      }
+      if (event.key === 'Tab' && window.matchMedia('(max-width: 768px)').matches) {
+        const buttons = Array.from(document.getElementById(actionsId)?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') || []);
+        const first = buttons[0];
+        const last = buttons.at(-1);
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === actionsTrigger.current)) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === actionsTrigger.current)) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [actionsOpen, actionsId]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isDeleted || isEditing) return;
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    isLongPressRef.current = false;
+
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setActionsOpen(true);
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(35); } catch {}
+      }
+    }, 450);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    if (dx > 10 || dy > 10) {
+      if (touchTimerRef.current) {
+        clearTimeout(touchTimerRef.current);
+        touchTimerRef.current = null;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+    touchStartPosRef.current = null;
+    setTimeout(() => {
+      isLongPressRef.current = false;
+    }, 150);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (isDeleted || isEditing) return;
+    e.preventDefault();
+    setActionsOpen(true);
+  };
+
+  const handleCopy = async () => {
+    if (!message.body) return;
+    try {
+      await navigator.clipboard.writeText(message.body);
+      success('Copied to clipboard');
+    } catch {
+      error('Failed to copy message');
+    }
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editBody, setEditBody] = useState(message.body);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -136,36 +248,86 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     }
   };
 
+  const handleReaction = async (emoji: string) => {
+    try { await onToggleReaction(message.id, emoji); }
+    catch (err) { error(err instanceof Error ? err.message : 'Could not update reaction.'); }
+  };
+
   return (
-    <div className={`message-row ${isMe ? 'sent' : 'received'}`}>
+    <div
+      className={`message-row ${isMe ? 'sent' : 'received'} ${isConsecutive ? 'consecutive' : ''} ${actionsOpen ? 'actions-open' : ''}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && actionsOpen) {
+          event.stopPropagation();
+          setActionsOpen(false);
+          actionsTrigger.current?.focus();
+        }
+      }}
+    >
       {!isMe && (
-        <Avatar name={senderName} src={senderAvatar} size="sm" />
+        isConsecutive ? (
+          <div className="message-avatar-spacer" aria-hidden="true" />
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenUserProfile?.(message.sender_id, senderProfile); }
+            }}
+            onClick={() => onOpenUserProfile?.(message.sender_id, senderProfile)}
+            style={{ cursor: 'pointer' }}
+            title={`View ${senderName}'s profile`}
+          >
+            <Avatar name={senderName} src={senderAvatar} size="sm" />
+          </div>
+        )
       )}
 
-      <div style={{ maxWidth: '100%' }}>
-        <div className={`message-bubble ${isDeleted ? 'deleted' : ''}`}>
+      <div className="message-content-wrapper" >
+        <div
+          className={`message-bubble ${isDeleted ? 'deleted' : ''}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onContextMenu={handleContextMenu}
+          onClick={(e) => {
+            if (isLongPressRef.current) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+        >
           {/* Sender name for received messages in group chats */}
-          {!isMe && (
-            <div className="message-sender-name">{senderName}</div>
+          {!isMe && !isConsecutive && (
+            <div
+              className="message-sender-name"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenUserProfile?.(message.sender_id, senderProfile); }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenUserProfile?.(message.sender_id, senderProfile);
+              }}
+              style={{ cursor: 'pointer' }}
+              title={`View ${senderName}'s profile`}
+            >
+              {senderName}
+            </div>
           )}
 
           {/* Deleted tombstone */}
           {isDeleted ? (
             <div className="message-text">This message was deleted</div>
           ) : isEditing ? (
-            <div style={{ minWidth: '220px' }}>
+            <div className="message-edit">
               <textarea
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
-                className="composer-input"
-                style={{
-                  width: '100%',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '6px 8px',
-                  color: 'white',
-                }}
+                aria-label="Edit message"
+                className="input-control message-edit-input"
                 rows={2}
               />
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '6px' }}>
@@ -208,7 +370,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                         <div key={att.id} style={{ position: 'relative' }}>
                           {url ? (
                             <a href={url} target="_blank" rel="noopener noreferrer">
-                              <img
+                              <Image unoptimized width={320} height={260}
                                 src={url}
                                 alt={att.original_name}
                                 className="attachment-img-preview"
@@ -218,9 +380,17 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                             <div
                               onClick={() => fetchAttachmentUrl(att)}
                               className="attachment-card"
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  void fetchAttachmentUrl(att);
+                                }
+                              }}
                             >
-                              <FileText size={18} color="var(--accent)" />
-                              <span>{att.original_name} (Click to load image)</span>
+                              <FileText size={18} className="attachment-icon" />
+                              <span className="attachment-filename">{att.original_name} (Click to load image)</span>
                             </div>
                           )}
                         </div>
@@ -246,17 +416,26 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                           }
                         }}
                         className="attachment-card"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            if (url) window.open(url, '_blank');
+                            else await fetchAttachmentUrl(att);
+                          }
+                        }}
                       >
-                        <FileText size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
+                        <FileText size={18} className="attachment-icon" />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '0.833rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="attachment-filename">
                             {att.original_name}
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <div className="attachment-filesize">
                             {formatFileSize(att.size_bytes)}
                           </div>
                         </div>
-                        <Download size={14} color="#94a3b8" />
+                        <Download size={15} className="attachment-download-icon" />
                       </div>
                     );
                   })}
@@ -274,9 +453,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             {isMe && !isDeleted && (
               <span title={isReadByOthers ? 'Read' : 'Sent'}>
                 {isReadByOthers ? (
-                  <CheckCheck size={13} color="var(--accent)" />
+                  <CheckCheck size={13} color="currentColor" />
                 ) : (
-                  <Check size={13} color="rgba(255,255,255,0.7)" />
+                  <Check size={13} color="currentColor" />
                 )}
               </span>
             )}
@@ -284,42 +463,98 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         </div>
 
         {/* Hover Action Menu */}
-        {!isDeleted && (
-          <div className="message-hover-actions">
-            {QUICK_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => onToggleReaction(message.id, emoji)}
-                className="action-btn-mini"
-                title={`React with ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
+        {!isDeleted && !isEditing && (
+          <>
+            <button
+              ref={actionsTrigger}
+              className="message-actions-trigger"
+              aria-label="Message actions"
+              aria-expanded={actionsOpen}
+              aria-controls={actionsId}
+              onClick={() => setActionsOpen(!actionsOpen)}
+              type="button"
+            >
+              <MoreHorizontal size={18} />
+            </button>
 
-            {isMe && (
-              <>
-                <button
-                  onClick={() => {
-                    setEditBody(message.body);
-                    setIsEditing(true);
-                  }}
-                  className="action-btn-mini"
-                  title="Edit message"
-                >
-                  <Edit2 size={13} />
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="action-btn-mini"
-                  style={{ color: 'var(--danger)' }}
-                  title="Delete message"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </>
+            {actionsOpen && (
+              <div
+                className="message-actions-backdrop"
+                onClick={() => setActionsOpen(false)}
+                aria-hidden="true"
+              />
             )}
-          </div>
+
+            <div
+              id={actionsId}
+              className={`message-hover-actions ${actionsOpen ? 'open' : ''}`}
+              role="group"
+              aria-label="Message actions"
+            >
+              <div className="message-actions-emojis">
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      void handleReaction(emoji);
+                      setActionsOpen(false);
+                    }}
+                    className="action-btn-mini"
+                    title={`React with ${emoji}`}
+                    type="button"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              <div className="message-actions-tools">
+                {message.body && (
+                  <button
+                    onClick={() => {
+                      setActionsOpen(false);
+                      void handleCopy();
+                    }}
+                    className="action-btn-mini"
+                    title="Copy message"
+                    type="button"
+                  >
+                    <Copy size={13} />
+                    <span className="action-btn-label">Copy</span>
+                  </button>
+                )}
+                {isMe && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setActionsOpen(false);
+                        setEditBody(message.body);
+                        setIsEditing(true);
+                      }}
+                      className="action-btn-mini"
+                      title="Edit message"
+                      type="button"
+                    >
+                      <Edit2 size={13} />
+                      <span className="action-btn-label">Edit</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActionsOpen(false);
+                        void handleDelete();
+                      }}
+                      className="action-btn-mini action-btn-danger"
+                      title="Delete message"
+                      type="button"
+                    >
+                      <Trash2 size={13} />
+                      <span className="action-btn-label">Delete</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Reaction Badges */}
@@ -328,7 +563,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             {reactionGroups.map((rg) => (
               <button
                 key={rg.emoji}
-                onClick={() => onToggleReaction(message.id, rg.emoji)}
+                onClick={() => handleReaction(rg.emoji)}
                 className={`reaction-pill ${rg.hasReacted ? 'active' : ''}`}
                 title={`Reacted by ${rg.count} user(s)`}
               >

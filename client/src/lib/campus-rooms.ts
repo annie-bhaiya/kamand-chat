@@ -1,5 +1,5 @@
-import { CampusRoom, CampusEvent, CampusTicket, MoodleAssignment, MessDayMenu } from '@/types/chat';
-export type { CampusRoom, CampusEvent, CampusTicket, MoodleAssignment, MessDayMenu };
+import { CampusEvent,CampusRoom,CampusTicket,MessDayMenu,MoodleAssignment } from '@/types/chat';
+export type { CampusEvent,CampusRoom,CampusTicket,MessDayMenu,MoodleAssignment };
 
 // Re-export or define complete rooms list for fast local lookup and rendering
 export const ALL_CAMPUS_ROOMS: CampusRoom[] = [

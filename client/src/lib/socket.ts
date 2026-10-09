@@ -1,26 +1,30 @@
-import { io, Socket } from 'socket.io-client';
+import { io,Socket } from 'socket.io-client';
 import { api } from './api';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 type Listener = (payload: unknown) => void;
 
-class SocketManager {
+export class SocketManager {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<Listener>> = new Map();
   private lastTypingSent: number = 0;
   private isConnecting: boolean = false;
 
   connect(token: string) {
-    if (this.socket && this.socket.connected) {
+    if (this.socket) {
       if ((this.socket.auth as { token?: string })?.token === token) {
+        if (!this.socket.connected && !this.isConnecting) {
+          this.isConnecting = true;
+          this.socket.connect();
+        }
         return;
       }
       this.disconnect();
     }
 
-    if (this.isConnecting) return;
     this.isConnecting = true;
+    this.dispatch('connection:status', { connected: false, status: 'connecting' });
 
     this.socket = io(SOCKET_URL, {
       transports: ['websocket'],
@@ -48,6 +52,7 @@ class SocketManager {
 
     // Real-time server events
     const serverEvents = [
+      'campus:changed',
       'message:new',
       'message:updated',
       'message:deleted',
@@ -84,9 +89,11 @@ class SocketManager {
 
   disconnect() {
     if (this.socket) {
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
       this.isConnecting = false;
+      this.lastTypingSent = 0;
       this.dispatch('connection:status', { connected: false, status: 'disconnected' });
     }
   }
@@ -135,10 +142,7 @@ class SocketManager {
 
     this.socket.emit(
       'typing',
-      { conversation_id: conversationId, is_typing: isTyping },
-      (ack: { ok: boolean; error?: string }) => {
-        // Ack received
-      }
+      { conversation_id: conversationId, is_typing: isTyping }
     );
   }
 

@@ -1,13 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, GraduationCap, SlidersHorizontal, MessageCircle, Users, MapPin } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/Toast';
 import { useVisualSettings } from '@/components/settings/VisualSettings';
+import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
-import { lookupCampusUser, parseRollNumber } from '@/lib/campus';
+import { lookupCampusUser,parseRollNumber } from '@/lib/campus';
+import { ArrowLeft,ArrowRight,CheckCircle2,Eye,EyeOff,GraduationCap,MapPin,MessageCircle,SlidersHorizontal,Users } from 'lucide-react';
+import Link from 'next/link';
+import React,{ useEffect,useState } from 'react';
 
 type Stage = 'roll' | 'login' | 'register';
 export function AuthCard() {

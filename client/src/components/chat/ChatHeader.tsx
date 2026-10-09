@@ -1,28 +1,27 @@
 'use client';
 
-import React from 'react';
-import { useChat } from '@/context/ChatContext';
-import { useAuth } from '@/context/AuthContext';
+import { useCampusPermissions } from '@/components/campus/useCampusPermissions';
 import { Avatar } from '@/components/ui/Avatar';
+import { useAuth } from '@/context/AuthContext';
+import { useChat } from '@/context/ChatContext';
+import { ALL_CAMPUS_ROOMS } from '@/lib/campus-rooms';
 import {
-  getConversationMembers,
-  getOtherMember,
-  getMemberProfile,
+getConversationMembers,
+getMemberProfile,
+getOtherMember,
 } from '@/lib/utils';
 import {
-  Search,
-  Info,
-  ChevronLeft,
-  Users,
-  Calendar,
-  Wrench,
-  GraduationCap,
-  UtensilsCrossed,
-  Sparkles,
-  MapPin,
-  ShieldCheck,
+Calendar,
+ChevronLeft,
+GraduationCap,
+Info,
+Search,
+ShieldCheck,
+Users,
+UtensilsCrossed,
+Wrench
 } from 'lucide-react';
-import { ALL_CAMPUS_ROOMS, getCategoryBadge, isCampusRoomAdmin } from '@/lib/campus-rooms';
+import React from 'react';
 
 interface ChatHeaderProps {
   onBackMobile: () => void;
@@ -45,6 +44,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   const { activeConversation, typingUserIds } = useChat();
   const { user, profile } = useAuth();
+  const room = ALL_CAMPUS_ROOMS.find(item => item.slug === activeConversation?.campus_room_slug);
+  const permissions = useCampusPermissions(room?.slug);
 
   if (!activeConversation) return null;
 
@@ -62,19 +63,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   let avatarKey: string | null = null;
 
   // Identify if this conversation is a campus scoped room
-  const normalizedTitle = title.replace(/^#/, '').toLowerCase().trim();
-  const campusRoom = ALL_CAMPUS_ROOMS.find(
-    (r) =>
-      r.name.toLowerCase() === normalizedTitle ||
-      r.slug.toLowerCase() === normalizedTitle ||
-      (r.courseCode && normalizedTitle.includes(r.courseCode.toLowerCase()))
-  );
-
-  const isCampusAdmin = campusRoom
-    ? isCampusRoomAdmin(campusRoom.slug, user) ||
-      isCampusRoomAdmin(campusRoom.slug, profile?.username)
-    : false;
-  const isRoomAdmin = Boolean(isConvOwnerOrAdmin || isCampusAdmin);
+  const campusRoom = room;
+  const isRoomAdmin = campusRoom ? !!permissions?.isAdmin : isConvOwnerOrAdmin;
 
   if (isDirect) {
     if (otherProfile) {
@@ -92,9 +82,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       subtitle = 'Intracampus Direct Chat';
     }
   } else if (campusRoom) {
-    title = `#${campusRoom.name}`;
+    title = activeConversation.title || `#${campusRoom.name}`;
     avatarName = campusRoom.name;
-    const activeCount = members.filter((m) => !m.left_at).length || 0;
     subtitle =
       typingUserIds.length > 0
         ? `${typingUserIds.length} member(s) typing...`
@@ -116,16 +105,33 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           className="btn-icon btn-ghost"
           style={{ display: 'none' }}
           id="btn-mobile-back"
+          aria-label="Back to conversation list"
           title="Back to conversation list"
         >
           <ChevronLeft size={20} />
         </button>
 
         {isDirect ? (
-          <Avatar name={avatarName} src={avatarKey} size="md" online={false} />
+          <div
+            onClick={onOpenInfo}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
+            }}
+            style={{ cursor: 'pointer' }}
+            title="View user profile, search & attachments"
+          >
+            <Avatar name={avatarName} src={avatarKey} size="md" />
+          </div>
         ) : campusRoom ? (
           <div
             onClick={onOpenInfo}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
+            }}
             style={{
               width: 40,
               height: 40,
@@ -136,10 +142,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#c084fc',
+              color: 'var(--on-accent)',
               fontWeight: 'bold',
               fontSize: '1.2rem',
-              fontFamily: 'monospace',
+              fontFamily: 'inherit',
               cursor: 'pointer',
               boxShadow: '0 2px 10px var(--accent-light)',
             }}
@@ -149,6 +155,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         ) : (
           <div
             onClick={onOpenInfo}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
+            }}
             style={{
               width: 40,
               height: 40,
@@ -157,7 +168,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--text-primary)',
+              color: 'var(--on-accent)',
               cursor: 'pointer',
             }}
           >
@@ -167,8 +178,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
         <div
           className="chat-title-group"
-          onClick={!isDirect ? onOpenInfo : undefined}
-          style={{ cursor: !isDirect ? 'pointer' : 'default' }}
+          onClick={onOpenInfo}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
+            }}
+          style={{ cursor: 'pointer' }}
+          title={isDirect ? "View user profile, search & attachments" : "View group profile, search & attachments"}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <h2 className="chat-title">{title}</h2>
@@ -194,9 +211,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                   fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '6px',
-                  backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                  color: '#facc15',
-                  border: '1px solid rgba(234, 179, 8, 0.3)',
+                  backgroundColor: 'var(--warning-light)',
+                  color: 'var(--warning)',
+                  border: '1px solid var(--warning-light)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
@@ -227,17 +244,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <button
                 onClick={() => onOpenCalendar(campusRoom.name, isRoomAdmin)}
                 className="btn btn-secondary"
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '0.8rem',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'var(--accent-light)',
-                  borderColor: 'var(--accent-light)',
-                  color: 'var(--accent)',
-                }}
                 title="Unified Gymkhana Calendar & Venue Bookings"
               >
                 <Calendar size={14} className="text-[var(--accent)]" />
@@ -250,17 +256,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               <button
                 onClick={() => onOpenMoodle(campusRoom.courseCode || 'IC152', isRoomAdmin)}
                 className="btn btn-secondary"
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '0.8rem',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'var(--accent-light)',
-                  borderColor: 'var(--accent-light)',
-                  color: 'var(--accent)',
-                }}
                 title="Moodle LMS Assignments & Webhook Sync"
               >
                 <GraduationCap size={14} className="text-[var(--accent)]" />
@@ -269,23 +264,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             )}
 
             {/* Hostels: Maintenance Tickets */}
-            {campusRoom.category === 'hostels' && onOpenTickets && (
+            {!profile?.chat_only && campusRoom.category === 'hostels' && onOpenTickets && (
               <button
                 onClick={() =>
                   onOpenTickets('hostel', campusRoom.hostelCluster || campusRoom.name, isRoomAdmin)
                 }
                 className="btn btn-secondary"
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '0.8rem',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'var(--accent-light)',
-                  borderColor: 'var(--accent-light)',
-                  color: '#bae6fd',
-                }}
                 title="Hostel Problem & Maintenance Tickets"
               >
                 <Wrench size={14} className="text-[var(--accent)]" />
@@ -294,23 +278,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             )}
 
             {/* Messes: Menus, Rebates & Mess Tickets */}
-            {campusRoom.category === 'messes' && (
+            {!profile?.chat_only && campusRoom.category === 'messes' && (
               <>
                 {onOpenMessMenu && (
                   <button
                     onClick={() => onOpenMessMenu(campusRoom.slug, isRoomAdmin)}
                     className="btn btn-secondary"
-                    style={{
-                      padding: '6px 10px',
-                      fontSize: '0.8rem',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      background: 'rgba(245, 158, 11, 0.15)',
-                      borderColor: 'rgba(245, 158, 11, 0.3)',
-                      color: '#fde68a',
-                    }}
                     title="Daily Mess Menu & Rebate Portal"
                   >
                     <UtensilsCrossed size={14} className="text-[var(--accent)]" />
@@ -321,20 +294,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                   <button
                     onClick={() => onOpenTickets('mess', campusRoom.name, isRoomAdmin)}
                     className="btn btn-secondary"
-                    style={{
-                      padding: '6px 10px',
-                      fontSize: '0.8rem',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      borderColor: 'rgba(239, 68, 68, 0.3)',
-                      color: '#fecaca',
-                    }}
                     title="Report Mess Shortage or Food Quality Issue"
                   >
-                    <Wrench size={14} className="text-rose-400" />
+                    <Wrench size={14} className="text-[var(--accent)]" />
                     <span className="hidden-mobile">Mess Issues</span>
                   </button>
                 )}
@@ -352,16 +314,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           <Search size={18} />
         </button>
 
-        {/* Info drawer / Members */}
-        {!isDirect && (
-          <button
-            onClick={onOpenInfo}
-            className="btn-icon btn-ghost"
-            title="Channel info & members"
-          >
-            <Info size={18} />
-          </button>
-        )}
+        {/* Info drawer / Profile */}
+        <button
+          onClick={onOpenInfo}
+          className="btn-icon btn-ghost"
+          title={isDirect ? "User profile, search & attachments" : "Group info, search & attachments"}
+        >
+          <Info size={18} />
+        </button>
       </div>
     </div>
   );

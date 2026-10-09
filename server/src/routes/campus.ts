@@ -1,37 +1,27 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { randomUUID } from 'node:crypto';
+import { campusRecordRoutes } from './campus-records.js';
 import type { ClientFactory } from '../supabase.js';
 import type { Events } from '../events.js';
 import { ApiError, unwrap } from '../errors.js';
 import {
   CAMPUS_ROOMS,
-  SEED_EVENTS,
-  SEED_TICKETS,
   SEED_MOODLE_DATA,
   SEED_MESS_MENUS,
-  CampusEvent,
-  CampusTicket,
   MoodleAssignment,
   isCampusRoomAdmin,
-  canManageEvents,
-  canResolveTickets,
   canBroadcastMoodle,
 } from '../campus-data.js';
 
-// Live in-memory state initialized with seeds
-let liveEvents: CampusEvent[] = [...SEED_EVENTS];
-let liveTickets: CampusTicket[] = [...SEED_TICKETS];
-let liveMoodleData: Record<string, MoodleAssignment[]> = JSON.parse(JSON.stringify(SEED_MOODLE_DATA));
-
-// Room to conversation mapping cache
-const roomConversationMap = new Map<string, string>();
-
 export function campusRoutes(factory: ClientFactory, events: Events) {
   const router = Router();
+  // Moodle remains an explicit sample integration.
+  const liveMoodleData: Record<string, MoodleAssignment[]> = structuredClone(SEED_MOODLE_DATA);
+  const moodleRefreshes: Record<string, string> = {};
+  router.use((_req, res, next) => { res.setHeader('X-Campus-Data-Mode', 'persistent'); next(); });
 
-  // 1. Get all Campus Scoped Rooms
-  router.get('/rooms', (req, res) => {
+  // 1. Get all Campus Scoped Rooms (filtered by enrollment for restricted rooms)
+  router.get('/rooms', async (req, res) => {
     const category = req.query.category as string | undefined;
     const campus = req.query.campus as string | undefined;
 
@@ -41,6 +31,54 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
     }
     if (campus && campus !== 'Both') {
       filtered = filtered.filter(r => r.campus === campus || r.campus === 'Both');
+    }
+
+    if (req.user) {
+      const userProfile = unwrap(
+        await req.db.from('profiles').select('hostel, hostel_block, branch, mess, chat_only').eq('id', req.user.id).maybeSingle()
+      );
+      if (userProfile?.chat_only) {
+        filtered = filtered.filter(r => r.category !== 'hostels' && r.category !== 'messes' && r.category !== 'branches');
+      } else {
+        if (userProfile?.hostel) {
+          const uh = userProfile.hostel.toLowerCase().trim();
+          const ub = (userProfile.hostel_block || '').toLowerCase().trim();
+          filtered = filtered.filter(r => {
+            if (isCampusRoomAdmin(r.slug, req.user)) return true;
+            if (r.category !== 'hostels') return true;
+            const cluster = (r.hostelCluster || '').toLowerCase().trim();
+            const name = r.name.toLowerCase().trim();
+            const slug = r.slug.toLowerCase().trim();
+            const matchesCluster = cluster.includes(uh) || uh.includes(cluster) || name.includes(uh) || slug.includes(uh.replace(/\s+/g, '-'));
+            if (!matchesCluster) return false;
+            if (r.hostelBlock) {
+              return ub ? r.hostelBlock.toLowerCase().trim() === ub || name.includes(ub) : false;
+            }
+            return true;
+          });
+        }
+        if (userProfile?.branch) {
+          const uBranch = userProfile.branch.toLowerCase().trim();
+          filtered = filtered.filter(r => {
+            if (r.category !== 'branches') return true;
+            const name = r.name.toLowerCase().trim();
+            const slug = r.slug.toLowerCase().trim();
+            const id = (r.id || '').toLowerCase().trim();
+            return slug === uBranch || id === uBranch || name.includes(uBranch) || uBranch.includes(slug) || uBranch.includes(name);
+          });
+        }
+        if (userProfile?.mess) {
+          const um = userProfile.mess.toLowerCase().trim();
+          const keyword = um.replace(/\s*mess.*$/i, '').trim();
+          filtered = filtered.filter(r => {
+            if (isCampusRoomAdmin(r.slug, req.user)) return true;
+            if (r.category !== 'messes') return true;
+            const name = r.name.toLowerCase().trim();
+            const slug = r.slug.toLowerCase().trim();
+            return name.includes(um) || slug.includes(keyword) || name.includes(keyword);
+          });
+        }
+      }
     }
 
     res.json({ data: filtered });
@@ -56,19 +94,20 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
   });
 
   // 3. Get user permissions for a specific room
-  router.get('/rooms/:slug/permissions', (req, res) => {
+  router.get('/rooms/:slug/permissions', async (req, res) => {
     const room = CAMPUS_ROOMS.find(r => r.slug === req.params.slug);
     if (!room) {
       throw new ApiError(404, 'NOT_FOUND', 'Campus room not found.');
     }
 
     const isAdmin = isCampusRoomAdmin(room.slug, req.user);
+    const persisted = req.user ? unwrap(await req.db.rpc('campus_management_permissions', { p_slug: room.slug })) : { canManage: false, canResolve: false, canAccess: false };
     res.json({
       data: {
         roomSlug: room.slug,
         isAdmin,
-        canBookEvents: canManageEvents(req.user, room.name, isAdmin),
-        canResolveTickets: canResolveTickets(req.user, room.category === 'messes' ? 'mess' : 'hostel', room.hostelCluster || room.name, isAdmin),
+        canBookEvents: Boolean(persisted.canManage),
+        canResolveTickets: ['hostels', 'messes'].includes(room.category) && Boolean(persisted.canResolve),
         canBroadcastMoodle: canBroadcastMoodle(req.user, room.courseCode || room.name, isAdmin),
         canUpdateMenu: room.category === 'messes' && isAdmin,
       },
@@ -86,6 +125,67 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
       throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to join campus room conversations.');
     }
 
+    if (room.category === 'hostels' || room.category === 'messes' || room.category === 'branches') {
+      const userProfile = unwrap(
+        await req.db.from('profiles').select('hostel, hostel_block, branch, mess, chat_only').eq('id', req.user.id).maybeSingle()
+      );
+      if (userProfile?.chat_only) {
+        throw new ApiError(403, 'FORBIDDEN', 'Chat-only mode: hostel, mess, and branch room chats are not accessible.');
+      }
+      const isAdmin = isCampusRoomAdmin(room.slug, req.user);
+      if (!isAdmin) {
+        if (room.category === 'hostels') {
+          if (!userProfile?.hostel) {
+            throw new ApiError(403, 'RESIDENCE_REQUIRED', 'Please select your hostel before joining hostel chats.');
+          }
+          const userHostel = userProfile.hostel.toLowerCase().trim();
+          const roomCluster = (room.hostelCluster || '').toLowerCase().trim();
+          const roomName = room.name.toLowerCase().trim();
+          if (!roomCluster.includes(userHostel) && !userHostel.includes(roomCluster) && !roomName.includes(userHostel)) {
+            throw new ApiError(403, 'FORBIDDEN', 'You can only join chat rooms for your assigned hostel.');
+          }
+          if (room.hostelBlock) {
+            if (!userProfile?.hostel_block) {
+              throw new ApiError(403, 'RESIDENCE_REQUIRED', 'Please select your hostel block before joining unit block chats.');
+            }
+            const userBlock = userProfile.hostel_block.toLowerCase().trim();
+            const roomBlock = room.hostelBlock.toLowerCase().trim();
+            if (userBlock !== roomBlock && !roomName.includes(userBlock)) {
+              throw new ApiError(403, 'FORBIDDEN', 'You can only join the chat room for your assigned hostel block.');
+            }
+          }
+        } else if (room.category === 'branches') {
+          if (!userProfile?.branch) {
+            throw new ApiError(403, 'BRANCH_REQUIRED', 'Please select your branch before joining branch chats.');
+          }
+          const userBranch = userProfile.branch.toLowerCase().trim();
+          const roomName = room.name.toLowerCase().trim();
+          const roomSlug = room.slug.toLowerCase().trim();
+          const roomId = (room.id || '').toLowerCase().trim();
+          const matchesBranch =
+            roomSlug === userBranch ||
+            roomId === userBranch ||
+            roomName.includes(userBranch) ||
+            userBranch.includes(roomSlug) ||
+            userBranch.includes(roomName);
+          if (!matchesBranch) {
+            throw new ApiError(403, 'FORBIDDEN', 'You can only join the chat room for your enrolled branch.');
+          }
+        } else if (room.category === 'messes') {
+          if (!userProfile?.mess) {
+            throw new ApiError(403, 'RESIDENCE_REQUIRED', 'Please select your mess before joining mess chats.');
+          }
+          const userMess = userProfile.mess.toLowerCase().trim();
+          const roomName = room.name.toLowerCase().trim();
+          const roomSlug = room.slug.toLowerCase().trim();
+          const messKeyword = userMess.replace(/\s*mess.*$/i, '').trim();
+          if (!roomName.includes(userMess) && !roomSlug.includes(messKeyword) && !roomName.includes(messKeyword)) {
+            throw new ApiError(403, 'FORBIDDEN', 'You can only join the chat room for your assigned mess.');
+          }
+        }
+      }
+    }
+
     try {
       const rpcResult = await req.db.rpc('join_or_create_campus_room', {
         p_room_slug: room.slug,
@@ -97,13 +197,11 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
         throw new ApiError(500, 'ROOM_JOIN_FAILED', 'Could not provision campus room conversation.');
       }
 
-      roomConversationMap.set(room.slug, conv.id);
+      const isAdmin = isCampusRoomAdmin(room.slug, req.user);
 
-      const isOwner = conv.created_by === req.user.id;
-      const isAdmin = isCampusRoomAdmin(room.slug, req.user, isOwner);
-
+      events.invalidateMembers(conv.id);
       // Notify realtime subscribers that membership or conversation was updated
-      await events.safely(() =>
+      void events.safely(() =>
         events.conversation(req.db, conv.id, 'conversation:updated', { conversation_id: conv.id })
       );
 
@@ -120,244 +218,26 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
     }
   });
 
-  // 5. Gymkhana Calendar & Event Management System
-  router.get('/events', (req, res) => {
-    const venue = req.query.venue as string | undefined;
-    const category = req.query.category as string | undefined;
-
-    let events = [...liveEvents];
-    if (venue) {
-      events = events.filter(e => e.venue.toLowerCase() === venue.toLowerCase());
-    }
-    if (category) {
-      events = events.filter(e => e.category.toLowerCase() === category.toLowerCase());
-    }
-
-    // Sort by date ascending
-    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    res.json({ data: events });
-  });
-
-  router.post('/events', async (req, res) => {
-    const schema = z.object({
-      title: z.string().trim().min(3).max(120),
-      description: z.string().trim().default(''),
-      category: z.enum(['Club Workshop', 'Fest Event', 'Sports Tournament', 'Placement & Tech Talk', 'General']),
-      organizer: z.string().trim().min(2).max(80),
-      venue: z.enum(['Auditorium A1/A2', 'A13 Hall', 'South Campus Grounds', 'SCEE Seminar Hall', 'Sports Complex', 'Other']),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date format must be YYYY-MM-DD'),
-      startTime: z.string().trim().min(1),
-      endTime: z.string().trim().min(1),
-    });
-
-    const input = schema.parse(req.body);
-
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to book campus events.');
-    }
-
-    // Role Enforcement: Only room admins, club coordinators, or Gymkhana Council can book venues
-    if (!canManageEvents(req.user, input.organizer)) {
-      throw new ApiError(
-        403,
-        'FORBIDDEN',
-        `Administrative privileges required: Only coordinators for "${input.organizer}" or Gymkhana Council can reserve venues and schedule events.`
-      );
-    }
-
-    // Collision Detection: Check if another event is scheduled for the same venue and date
-    const collision = liveEvents.find(
-      e =>
-        e.date === input.date &&
-        e.venue === input.venue &&
-        e.status === 'approved' &&
-        (e.startTime === input.startTime ||
-         (input.startTime >= e.startTime && input.startTime < e.endTime) ||
-         (input.endTime > e.startTime && input.endTime <= e.endTime))
-    );
-
-    const newEvent: CampusEvent = {
-      id: `event-${Date.now()}-${randomUUID().slice(0, 6)}`,
-      ...input,
-      status: collision ? 'conflict' : 'approved',
-      createdBy: req.user.id,
-      createdAt: new Date().toISOString(),
-    };
-
-    liveEvents.unshift(newEvent);
-
-    if (collision) {
-      res.status(200).json({
-        data: newEvent,
-        warning: `Scheduling collision detected with "${collision.title}" at ${input.venue} (${collision.startTime} - ${collision.endTime}). Marked for Gymkhana Council resolution.`,
-      });
-      return;
-    }
-
-    res.status(201).json({ data: newEvent });
-  });
-
-  router.patch('/events/:id/status', (req, res) => {
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to update event status.');
-    }
-
-    const { status } = z.object({ status: z.enum(['pending', 'approved', 'conflict', 'completed']) }).parse(req.body);
-    const event = liveEvents.find(e => e.id === req.params.id);
-    if (!event) {
-      throw new ApiError(404, 'NOT_FOUND', 'Event not found.');
-    }
-
-    if (!canManageEvents(req.user, event.organizer)) {
-      throw new ApiError(
-        403,
-        'FORBIDDEN',
-        'Only Gymkhana Council or event organizers can change event approval status.'
-      );
-    }
-
-    event.status = status;
-    res.json({ data: event });
-  });
-
-  // 6. Hostels & Messes Problem + Solution Ticket Management
-  router.get('/tickets', (req, res) => {
-    const scope = req.query.scope as string | undefined;
-    const campus = req.query.campus as string | undefined;
-    const status = req.query.status as string | undefined;
-    const cluster = req.query.cluster as string | undefined;
-
-    let tickets = [...liveTickets];
-    if (scope) {
-      tickets = tickets.filter(t => t.scope === scope);
-    }
-    if (campus) {
-      tickets = tickets.filter(t => t.campus === campus);
-    }
-    if (status) {
-      tickets = tickets.filter(t => t.status === status);
-    }
-    if (cluster) {
-      tickets = tickets.filter(t => t.clusterOrMess.toLowerCase().includes(cluster.toLowerCase()));
-    }
-
-    // Sort by upvotes descending (highest priority first)
-    tickets.sort((a, b) => b.upvotes - a.upvotes);
-
-    res.json({ data: tickets });
-  });
-
-  router.post('/tickets', async (req, res) => {
-    const schema = z.object({
-      title: z.string().trim().min(5).max(160),
-      description: z.string().trim().default(''),
-      scope: z.enum(['hostel', 'mess']),
-      category: z.string().trim().min(2),
-      campus: z.enum(['North', 'South']),
-      clusterOrMess: z.string().trim().min(2),
-      specificLocation: z.string().trim().min(2),
-    });
-
-    const input = schema.parse(req.body);
-
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to submit maintenance tickets.');
-    }
-
-    // Look up creator display name
-    const profile = await req.db
-      .from('profiles')
-      .select('display_name, username')
-      .eq('id', req.user.id)
-      .single();
-
-    const creatorName = profile.data?.display_name || profile.data?.username || 'Student';
-
-    const newTicket: CampusTicket = {
-      id: `ticket-${Date.now()}-${randomUUID().slice(0, 6)}`,
-      ...input,
-      status: 'Reported',
-      upvotes: 1,
-      upvotedBy: [req.user.id],
-      createdBy: req.user.id,
-      creatorName,
-      createdAt: new Date().toISOString(),
-    };
-
-    liveTickets.unshift(newTicket);
-    res.status(201).json({ data: newTicket });
-  });
-
-  router.post('/tickets/:id/upvote', (req, res) => {
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to upvote tickets.');
-    }
-    const ticket = liveTickets.find(t => t.id === req.params.id);
-    if (!ticket) {
-      throw new ApiError(404, 'NOT_FOUND', 'Ticket not found.');
-    }
-
-    const userId = req.user.id;
-    const alreadyUpvoted = ticket.upvotedBy.includes(userId);
-
-    if (alreadyUpvoted) {
-      ticket.upvotedBy = ticket.upvotedBy.filter(id => id !== userId);
-      ticket.upvotes = Math.max(0, ticket.upvotes - 1);
-    } else {
-      ticket.upvotedBy.push(userId);
-      ticket.upvotes += 1;
-    }
-
-    res.json({ data: { ticket, hasUpvoted: !alreadyUpvoted } });
-  });
-
-  router.patch('/tickets/:id/status', (req, res) => {
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to update ticket status.');
-    }
-
-    const { status } = z.object({
-      status: z.enum(['Reported', 'Under Investigation', 'Resolved by Warden/Caretaker']),
-    }).parse(req.body);
-
-    const ticket = liveTickets.find(t => t.id === req.params.id);
-    if (!ticket) {
-      throw new ApiError(404, 'NOT_FOUND', 'Ticket not found.');
-    }
-
-    // Role Enforcement: Only Wardens, Caretakers, or Dining Committee Heads can resolve tickets
-    if (!canResolveTickets(req.user, ticket.scope, ticket.clusterOrMess)) {
-      throw new ApiError(
-        403,
-        'FORBIDDEN',
-        'Only Hostel Wardens, Caretakers, or Mess Committee Heads can change ticket status.'
-      );
-    }
-
-    ticket.status = status;
-    if (status === 'Resolved by Warden/Caretaker') {
-      ticket.resolvedAt = new Date().toISOString();
-    }
-
-    res.json({ data: ticket });
-  });
+  router.use(campusRecordRoutes(events));
 
   // 7. Courses & Academics (Moodle Integration)
   router.get('/moodle/:courseCode', (req, res) => {
+    res.setHeader('X-Campus-Data-Mode', 'demo');
     const code = req.params.courseCode.toUpperCase();
     const items = liveMoodleData[code] || [];
     res.json({
       data: {
         courseCode: code,
         moodleHost: 'moodle.iitmandi.ac.in',
-        lastSynced: new Date().toISOString(),
+        lastSynced: moodleRefreshes[code] || null,
+        demo: true,
         assignments: items,
       },
     });
   });
 
   router.post('/moodle/sync', async (req, res) => {
+    res.setHeader('X-Campus-Data-Mode', 'demo');
     if (!req.user) {
       throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to trigger Moodle LMS sync.');
     }
@@ -378,8 +258,8 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
     const newAlert: MoodleAssignment = {
       id: `moodle-${code.toLowerCase()}-${Date.now()}`,
       courseCode: code,
-      title: `${code} New Quiz Announcement: Quiz #${Math.floor(Math.random() * 3) + 1}`,
-      description: `Automated broadcast from moodle.iitmandi.ac.in. Quiz will open this Friday at 18:00 IST for 45 minutes.`,
+      title: `${code} Sample quiz reminder`,
+      description: `Sample academic reminder. This is not fetched from Moodle and is not an official course announcement.`,
       type: 'quiz',
       dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
       weightage: '8% of total',
@@ -391,6 +271,7 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
       liveMoodleData[code] = [];
     }
     liveMoodleData[code].unshift(newAlert);
+    moodleRefreshes[code] = new Date().toISOString();
 
     res.json({
       data: {
@@ -403,12 +284,24 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
   });
 
   // 8. Mess Menus & Operational Schedules
-  router.get('/messes/:messSlug/menu', (req, res) => {
+  router.get('/messes/:messSlug/menu', async (req, res) => {
     const slug = req.params.messSlug.toLowerCase();
     const menu = SEED_MESS_MENUS[slug];
     if (!menu) {
       throw new ApiError(404, 'NOT_FOUND', 'Mess menu not found.');
     }
+    const stored = unwrap(await req.db.from('mess_menus').select('menu').eq('room_slug', slug).maybeSingle());
+    res.json({ data: stored?.menu ?? menu });
+  });
+
+  router.put('/messes/:messSlug/menu', async (req, res) => {
+    const slug = req.params.messSlug.toLowerCase();
+    if (!req.user) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to update menus.');
+    if (!SEED_MESS_MENUS[slug]) throw new ApiError(404, 'NOT_FOUND', 'Mess menu not found.');
+    if (!isCampusRoomAdmin(slug, req.user)) throw new ApiError(403, 'FORBIDDEN', 'Only the assigned mess manager can update this menu.');
+    const input = z.object({ day: z.string().trim().min(1).max(40), breakfast: z.string().trim().min(1).max(2000), lunch: z.string().trim().min(1).max(2000), snacks: z.string().trim().min(1).max(2000), dinner: z.string().trim().min(1).max(2000), specialNotice: z.string().trim().max(2000).optional() }).strict().parse(req.body);
+    const menu = { ...input, messName: SEED_MESS_MENUS[slug].messName };
+    unwrap(await req.db.from('mess_menus').upsert({ room_slug: slug, menu, updated_by: req.user.id, updated_at: new Date().toISOString() }));
     res.json({ data: menu });
   });
 

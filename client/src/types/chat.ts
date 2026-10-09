@@ -3,6 +3,11 @@ export interface Profile {
   username: string;
   display_name: string;
   avatar_key: string | null;
+  hostel?: string | null;
+  hostel_block?: string | null;
+  branch?: string | null;
+  mess?: string | null;
+  chat_only?: boolean;
   created_at: string;
 }
 
@@ -52,6 +57,7 @@ export interface Message {
 }
 
 export interface Conversation {
+  campus_room_slug?: string | null;
   id: string;
   type: 'direct' | 'group';
   title: string | null;
@@ -70,6 +76,7 @@ export interface AuthSession {
   expires_at?: number;
   token_type?: string;
   user: {
+    app_metadata?: { campus_rooms?: string[]; simulation?: boolean };
     id: string;
     email?: string;
     user_metadata?: {
@@ -127,6 +134,9 @@ export interface CampusRoom {
 }
 
 export interface CampusEvent {
+  roomSlug?: string;
+  canManage?: boolean;
+  updatedAt?: string;
   id: string;
   title: string;
   description: string;
@@ -136,12 +146,16 @@ export interface CampusEvent {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'pending' | 'approved' | 'conflict' | 'completed';
+  status: 'pending' | 'approved' | 'conflict' | 'completed' | 'cancelled';
   createdBy?: string;
   createdAt: string;
 }
 
 export interface CampusTicket {
+  roomSlug?: string;
+  canManage?: boolean;
+  updatedAt?: string;
+  history?: Array<{ status: string; createdAt: string }>;
   id: string;
   title: string;
   description: string;
@@ -156,7 +170,7 @@ export interface CampusTicket {
   createdBy: string;
   creatorName: string;
   createdAt: string;
-  resolvedAt?: string;
+  resolvedAt?: string | null;
 }
 
 export interface MoodleAssignment {

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { api } from '@/lib/api';
-import { Message, ConversationMember } from '@/types/chat';
-import { Search, FileText } from 'lucide-react';
-import { formatTime, formatDateDivider } from '@/lib/utils';
+import { formatDateDivider,formatTime } from '@/lib/utils';
+import { ConversationMember,Message } from '@/types/chat';
+import { Search } from 'lucide-react';
+import React,{ useEffect,useState } from 'react';
 
 interface MessageSearchModalProps {
   isOpen: boolean;

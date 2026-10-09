@@ -13,6 +13,9 @@ export interface CampusRoomDef {
 }
 
 export interface CampusEvent {
+  roomSlug?: string;
+  canManage?: boolean;
+  updatedAt?: string;
   id: string;
   title: string;
   description: string;
@@ -22,12 +25,16 @@ export interface CampusEvent {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'pending' | 'approved' | 'conflict' | 'completed';
+  status: 'pending' | 'approved' | 'conflict' | 'completed' | 'cancelled';
   createdBy?: string;
   createdAt: string;
 }
 
 export interface CampusTicket {
+  roomSlug?: string;
+  canManage?: boolean;
+  updatedAt?: string;
+  history?: Array<{ status: string; createdAt: string }>;
   id: string;
   title: string;
   description: string;
@@ -42,7 +49,7 @@ export interface CampusTicket {
   createdBy: string;
   creatorName: string;
   createdAt: string;
-  resolvedAt?: string;
+  resolvedAt?: string | null;
 }
 
 export interface MoodleAssignment {
@@ -1460,10 +1467,10 @@ export const ROOM_ADMINS: Record<string, string[]> = {
   'stac': ['b22110', 'admin', 'sntc_secy'],
   'scri': ['b22120', 'admin', 'sntc_secy'],
   // SAC Clubs
-  'music': ['b23101', 'admin', 'sac_secy'],
+  'music-club': ['b23101', 'admin', 'sac_secy'],
   'dance-vibrance': ['b23112', 'admin', 'sac_secy'],
   'drama-artgeeks': ['b23125', 'admin', 'sac_secy'],
-  'literary': ['b23130', 'admin', 'sac_secy'],
+  'literary-society': ['b23130', 'admin', 'sac_secy'],
   'perception': ['b23145', 'admin', 'sac_secy'],
   'design-fine-arts': ['b23150', 'admin', 'sac_secy'],
   // Fests & Committees
@@ -1489,21 +1496,25 @@ export const ROOM_ADMINS: Record<string, string[]> = {
   'maple-mess': ['warden_mess_south', 'caretaker_maple', 'admin'],
 };
 
-export function extractRollFromUser(user?: { email?: string; username?: string } | null): string {
+type CampusActor = { email?: string; username?: string; id?: string; email_confirmed_at?: string; app_metadata?: { [key: string]: unknown; campus_rooms?: string[] } };
+export function extractRollFromUser(user?: CampusActor | null): string {
   if (!user) return '';
-  if (user.username) return user.username.toLowerCase();
-  if (user.email) return (user.email.split('@')[0] || '').toLowerCase();
+  // Profile usernames are editable; elevated campus roles require a verified institute address.
+  if (!user.email_confirmed_at) return '';
+  const match = user.email?.toLowerCase().match(/^([^@]+)@(students\.iitmandi\.ac\.in|iitmandi\.ac\.in)$/);
+  if (match) return match[1] || '';
   return '';
 }
 
 export function isCampusRoomAdmin(
   roomSlug: string,
-  user?: { email?: string; username?: string; id?: string } | null,
+  user?: CampusActor | null,
   isConvOwner?: boolean
 ): boolean {
   if (!user) return false;
+  if (user.app_metadata?.campus_rooms?.includes(roomSlug)) return true;
   // If user is conversation owner, they are an admin
-  if (isConvOwner) return true;
+  if (isConvOwner && extractRollFromUser(user)) return true;
 
   const roll = extractRollFromUser(user);
   if (!roll) return false;
@@ -1519,18 +1530,20 @@ export function isCampusRoomAdmin(
 }
 
 export function canManageEvents(
-  user?: { email?: string; username?: string; id?: string } | null,
+  user?: CampusActor | null,
   organizer?: string,
   isConvOwner?: boolean
 ): boolean {
   if (!user) return false;
-  if (isConvOwner) return true;
+  const managedRoom = CAMPUS_ROOMS.find(room => room.name.toLowerCase() === organizer?.toLowerCase() || room.slug === organizer?.toLowerCase());
+  if (managedRoom && user.app_metadata?.campus_rooms?.includes(managedRoom.slug)) return true;
+  if (isConvOwner && extractRollFromUser(user)) return true;
 
   const roll = extractRollFromUser(user);
   if (GYMKHANA_ADMIN_ROLLS.has(roll)) return true;
 
   if (organizer) {
-    const slug = organizer.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = CAMPUS_ROOMS.find(room => room.name.toLowerCase() === organizer.toLowerCase() || room.slug === organizer.toLowerCase())?.slug || organizer.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const admins = ROOM_ADMINS[slug];
     if (admins && admins.includes(roll)) return true;
   }
@@ -1538,20 +1551,23 @@ export function canManageEvents(
 }
 
 export function canResolveTickets(
-  user?: { email?: string; username?: string; id?: string } | null,
+  user?: CampusActor | null,
   scope?: string,
   clusterOrMess?: string,
   isConvOwner?: boolean
 ): boolean {
   if (!user) return false;
-  if (isConvOwner) return true;
+  if (CAMPUS_ROOMS.some(room => user.app_metadata?.campus_rooms?.includes(room.slug) &&
+    (scope === 'mess' ? room.category === 'messes' : room.category === 'hostels') &&
+    [room.name, room.slug, room.hostelCluster].some(value => value?.toLowerCase().replace(/\s*\(.*/, '') === clusterOrMess?.toLowerCase().replace(/\s*\(.*/, '')))) return true;
+  if (isConvOwner && extractRollFromUser(user)) return true;
 
   const roll = extractRollFromUser(user);
   if (GYMKHANA_ADMIN_ROLLS.has(roll)) return true;
-  if (roll.includes('warden') || roll.includes('caretaker')) return true;
 
   if (clusterOrMess) {
-    const slug = clusterOrMess.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const room = CAMPUS_ROOMS.find(room => (room.category === 'messes' ? 'mess' : 'hostel') === scope && (room.name.toLowerCase() === clusterOrMess.toLowerCase() || room.slug === clusterOrMess.toLowerCase() || room.hostelCluster?.toLowerCase() === clusterOrMess.toLowerCase()));
+    const slug = room?.slug || clusterOrMess.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const admins = ROOM_ADMINS[slug];
     if (admins && admins.includes(roll)) return true;
   }
@@ -1559,16 +1575,15 @@ export function canResolveTickets(
 }
 
 export function canBroadcastMoodle(
-  user?: { email?: string; username?: string; id?: string } | null,
+  user?: CampusActor | null,
   courseCode?: string,
   isConvOwner?: boolean
 ): boolean {
   if (!user) return false;
-  if (isConvOwner) return true;
+  if (isConvOwner && extractRollFromUser(user)) return true;
 
   const roll = extractRollFromUser(user);
   if (GYMKHANA_ADMIN_ROLLS.has(roll)) return true;
-  if (roll.includes('faculty') || roll.includes('ta_')) return true;
 
   if (courseCode) {
     const slug = courseCode.toLowerCase();

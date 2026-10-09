@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { AlertCircle,CheckCircle2,Info,X } from 'lucide-react';
+import React,{ createContext,useCallback,useContext,useMemo,useState } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -34,16 +34,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 4000);
   }, [removeToast]);
 
-  const value = {
+  const value = useMemo(() => ({
     toast: addToast,
     error: (msg: string) => addToast(msg, 'error'),
     success: (msg: string) => addToast(msg, 'success'),
-  };
+  }), [addToast]);
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="toast-container">
+      <div className="toast-container" aria-live="polite">
         {toasts.map((t) => (
           <div key={t.id} className={`toast ${t.type}`}>
             {t.type === 'success' && <CheckCircle2 size={16} color="#10b981" />}
@@ -51,6 +51,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             {t.type === 'info' && <Info size={16} color="#6366f1" />}
             <span>{t.message}</span>
             <button
+              aria-label="Dismiss notification"
               onClick={() => removeToast(t.id)}
               style={{
                 background: 'transparent',

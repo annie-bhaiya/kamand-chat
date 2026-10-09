@@ -1,4 +1,4 @@
-import type { Conversation, ConversationMember, Profile } from '@/types/chat';
+import type { Conversation, ConversationMember } from '@/types/chat';
 // Utility functions for UI formatting, avatars, and animations
 
 export function formatTime(isoString: string): string {
@@ -120,3 +120,14 @@ export function getOtherMember(conv?: Conversation | null, currentUserId?: strin
   return members.find((m) => m.user_id !== currentUserId) || null;
 }
 
+export function getAvatarSrc(src?: string | null): string | null {
+  if (!src) return null;
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('blob:')) {
+    return src;
+  }
+  if (src.startsWith('/')) {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    return `${apiBase}${src}`;
+  }
+  return src;
+}
