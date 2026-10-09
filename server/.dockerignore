@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.env*
+!.env.example
+coverage
+.test-artifacts
+test
+supabase
+scripts
+certs
+docs
+*.log
+README.md

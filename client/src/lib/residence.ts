@@ -6,6 +6,12 @@ export interface ResidenceOption {
   location?: string;
 }
 
+/** Profiles store display names; menu and permission endpoints require canonical room slugs. */
+export function messRoomSlug(value?: string | null): string {
+  const name = value?.trim().toLowerCase().match(/^(pine|oak|alder|cedar|maple)(?=$|[\s-])/)?.[1];
+  return name ? `${name}-mess` : 'pine-mess';
+}
+
 export interface BranchOption {
   id: string;
   name: string;

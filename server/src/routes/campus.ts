@@ -1,23 +1,18 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { indiaWeekday, menuInputSchema, menuQuerySchema, menuResponse } from '../mess-menu.js';
 import { campusRecordRoutes } from './campus-records.js';
 import type { ClientFactory } from '../supabase.js';
 import type { Events } from '../events.js';
 import { ApiError, unwrap } from '../errors.js';
 import {
   CAMPUS_ROOMS,
-  SEED_MOODLE_DATA,
   SEED_MESS_MENUS,
-  MoodleAssignment,
   isCampusRoomAdmin,
-  canBroadcastMoodle,
 } from '../campus-data.js';
 
 export function campusRoutes(factory: ClientFactory, events: Events) {
   const router = Router();
-  // Moodle remains an explicit sample integration.
-  const liveMoodleData: Record<string, MoodleAssignment[]> = structuredClone(SEED_MOODLE_DATA);
-  const moodleRefreshes: Record<string, string> = {};
   router.use((_req, res, next) => { res.setHeader('X-Campus-Data-Mode', 'persistent'); next(); });
 
   // 1. Get all Campus Scoped Rooms (filtered by enrollment for restricted rooms)
@@ -108,7 +103,6 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
         isAdmin,
         canBookEvents: Boolean(persisted.canManage),
         canResolveTickets: ['hostels', 'messes'].includes(room.category) && Boolean(persisted.canResolve),
-        canBroadcastMoodle: canBroadcastMoodle(req.user, room.courseCode || room.name, isAdmin),
         canUpdateMenu: room.category === 'messes' && isAdmin,
       },
     });
@@ -220,69 +214,6 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
 
   router.use(campusRecordRoutes(events));
 
-  // 7. Courses & Academics (Moodle Integration)
-  router.get('/moodle/:courseCode', (req, res) => {
-    res.setHeader('X-Campus-Data-Mode', 'demo');
-    const code = req.params.courseCode.toUpperCase();
-    const items = liveMoodleData[code] || [];
-    res.json({
-      data: {
-        courseCode: code,
-        moodleHost: 'moodle.iitmandi.ac.in',
-        lastSynced: moodleRefreshes[code] || null,
-        demo: true,
-        assignments: items,
-      },
-    });
-  });
-
-  router.post('/moodle/sync', async (req, res) => {
-    res.setHeader('X-Campus-Data-Mode', 'demo');
-    if (!req.user) {
-      throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to trigger Moodle LMS sync.');
-    }
-
-    const { courseCode } = z.object({ courseCode: z.string().trim().min(2).max(20) }).parse(req.body);
-    const code = courseCode.toUpperCase();
-
-    // Role Enforcement: Only Course Instructors, TAs, or CRs can trigger manual Moodle sync & broadcasts
-    if (!canBroadcastMoodle(req.user, code)) {
-      throw new ApiError(
-        403,
-        'FORBIDDEN',
-        `Administrative privileges required: Only Course Instructors, TAs, or Class Representatives for ${code} can trigger Moodle synchronization.`
-      );
-    }
-
-    // Generate or refresh mock academic alert from moodle.iitmandi.ac.in
-    const newAlert: MoodleAssignment = {
-      id: `moodle-${code.toLowerCase()}-${Date.now()}`,
-      courseCode: code,
-      title: `${code} Sample quiz reminder`,
-      description: `Sample academic reminder. This is not fetched from Moodle and is not an official course announcement.`,
-      type: 'quiz',
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      weightage: '8% of total',
-      moodleUrl: `https://moodle.iitmandi.ac.in/course/view.php?name=${code}`,
-      status: 'pending',
-    };
-
-    if (!liveMoodleData[code]) {
-      liveMoodleData[code] = [];
-    }
-    liveMoodleData[code].unshift(newAlert);
-    moodleRefreshes[code] = new Date().toISOString();
-
-    res.json({
-      data: {
-        success: true,
-        courseCode: code,
-        alert: newAlert,
-        syncedAt: new Date().toISOString(),
-      },
-    });
-  });
-
   // 8. Mess Menus & Operational Schedules
   router.get('/messes/:messSlug/menu', async (req, res) => {
     const slug = req.params.messSlug.toLowerCase();
@@ -290,8 +221,10 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
     if (!menu) {
       throw new ApiError(404, 'NOT_FOUND', 'Mess menu not found.');
     }
-    const stored = unwrap(await req.db.from('mess_menus').select('menu').eq('room_slug', slug).maybeSingle());
-    res.json({ data: stored?.menu ?? menu });
+    const { weekday = indiaWeekday() } = menuQuerySchema.parse(req.query);
+    const stored = unwrap(await req.db.from('mess_menu_days').select('weekday,breakfast,lunch,dinner,special_notice').eq('room_slug', slug).eq('weekday', weekday).maybeSingle());
+    if (!stored) throw new ApiError(404, 'MENU_UNAVAILABLE', 'No menu has been published for this day.');
+    res.json({ data: menuResponse(stored, menu.messName) });
   });
 
   router.put('/messes/:messSlug/menu', async (req, res) => {
@@ -299,10 +232,11 @@ export function campusRoutes(factory: ClientFactory, events: Events) {
     if (!req.user) throw new ApiError(401, 'UNAUTHENTICATED', 'Sign in to update menus.');
     if (!SEED_MESS_MENUS[slug]) throw new ApiError(404, 'NOT_FOUND', 'Mess menu not found.');
     if (!isCampusRoomAdmin(slug, req.user)) throw new ApiError(403, 'FORBIDDEN', 'Only the assigned mess manager can update this menu.');
-    const input = z.object({ day: z.string().trim().min(1).max(40), breakfast: z.string().trim().min(1).max(2000), lunch: z.string().trim().min(1).max(2000), snacks: z.string().trim().min(1).max(2000), dinner: z.string().trim().min(1).max(2000), specialNotice: z.string().trim().max(2000).optional() }).strict().parse(req.body);
-    const menu = { ...input, messName: SEED_MESS_MENUS[slug].messName };
-    unwrap(await req.db.from('mess_menus').upsert({ room_slug: slug, menu, updated_by: req.user.id, updated_at: new Date().toISOString() }));
-    res.json({ data: menu });
+    const input = menuInputSchema.parse(req.body);
+    const row = { room_slug: slug, weekday: input.weekday, breakfast: input.breakfast, lunch: input.lunch,
+      dinner: input.dinner, special_notice: input.specialNotice ?? '', updated_by: req.user.id, updated_at: new Date().toISOString() };
+    unwrap(await req.db.from('mess_menu_days').upsert(row, { onConflict: 'room_slug,weekday' }));
+    res.json({ data: menuResponse(row, SEED_MESS_MENUS[slug].messName) });
   });
 
   return router;

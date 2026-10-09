@@ -123,12 +123,11 @@ export interface CampusRoom {
   id: string;
   slug: string;
   name: string;
-  category: 'clubs' | 'courses' | 'hostels' | 'branches' | 'messes';
+  category: 'clubs' | 'hostels' | 'branches' | 'messes';
   subcategory: string;
   campus?: 'North' | 'South' | 'Both';
   description: string;
   tags: string[];
-  courseCode?: string;
   hostelCluster?: string;
   hostelBlock?: string;
 }
@@ -173,24 +172,14 @@ export interface CampusTicket {
   resolvedAt?: string | null;
 }
 
-export interface MoodleAssignment {
-  id: string;
-  courseCode: string;
-  title: string;
-  description: string;
-  type: 'assignment' | 'quiz' | 'lab' | 'grade' | 'announcement';
-  dueDate: string;
-  weightage?: string;
-  moodleUrl: string;
-  status: 'pending' | 'submitted' | 'graded';
-}
 
 export interface MessDayMenu {
+  weekday: number;
+  todayWeekday: number;
   messName: string;
   day: string;
   breakfast: string;
   lunch: string;
-  snacks: string;
   dinner: string;
   specialNotice?: string;
 }

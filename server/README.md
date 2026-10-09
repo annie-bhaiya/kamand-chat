@@ -142,7 +142,7 @@ Use `/ready` as the readiness probe. Production backups, restore testing, email 
 
 The client prioritizes student conversations and provides light/dark/system appearance, pine/clay/lake accents, text sizing, message density, and reduced motion. DM Sans is served locally. Run `npm install`, `npm run dev`, `npm test`, `npm run typecheck`, and `npm run lint` in `../client`; the default frontend is http://localhost:3000 and API is http://localhost:4000.
 
-Calendar events, maintenance tickets, votes, status history and mess-menu edits persist in Supabase. Moodle reminders remain an explicit in-memory sample integration. Mess menus start with sample defaults; manager edits persist with room-scoped RLS. Mess rebate dates are a local visit draft, not a submitted claim. Sample Moodle refresh never automatically posts a chat message.
+Calendar events, maintenance tickets, votes, status history and mess-menu edits persist in Supabase. Mess menus start with sample defaults; manager edits persist with room-scoped RLS. Mess rebate dates are a local visit draft, not a submitted claim.
 
 Campus room identity is maintained by the private canonical catalogue migration `20261009033001_secure_campus_room_identity.sql`. Joining validates the slug and title and serializes creation. Anonymous execution is denied. Legacy groups remain intact and are not automatically adopted by matching titles; any legacy-room mapping requires an explicit database administrator decision. Privileged campus actions derive from verified institute email and room-specific rules, not editable usernames or display names.
 
@@ -157,6 +157,10 @@ Managers are assigned canonical room slugs in administrator-controlled `app_meta
 Run `npx tsx scripts/verify-simulation.ts` to verify one real account of each role, membership revocation, event/ticket permissions and menu persistence. Pass `--all` to verify every account login. The script also checks persistence across server instances, concurrent venue bookings, rescheduling, votes and ticket history. It respects Auth rate limits, removes only its own newly created demo event/ticket fixtures, logs out its sessions, removes its test student's room memberships, and saves the same effective menu contents.
 
 ## Persistent calendar and maintenance
+
+Mess menus use `mess_menu_days`, keyed by `(room_slug, weekday)` with ISO weekdays Monday=1 through Sunday=7 and separate breakfast, lunch, dinner and serving-note columns. Migration `20261009063004_mess_menu_weekdays.sql` splits the uploaded weekly schedules into 35 records and preserves shared daily items. The old `mess_menus` table remains an import snapshot for recovery; active reads and edits use the weekday table.
+
+`GET /api/campus/messes/:messSlug/menu` returns only today's menu in `Asia/Kolkata`. Add `?weekday=1` through `7` to browse another recurring day. A missing schedule returns 404 rather than a sample menu. Manager `PUT` requests require `weekday`, `breakfast`, `lunch`, `dinner`, and optional `specialNotice`; edits affect only that mess and weekday. The drawer opens on today, supports a day selector and Back to today, and resets on reopening.
 
 Apply `20261009035734_persist_calendar_maintenance.sql` with `npm run db:apply` (or the usual Supabase migration workflow). The migration creates `campus_events`, `maintenance_tickets`, `maintenance_ticket_votes` and `maintenance_ticket_history`, and adds canonical scope metadata to the private room catalogue. The hosted project already has this migration applied. New feeds start empty; bundled samples are not represented as real reports or reservations. The pre-migration sample feed was backed up in the repository's parent directory as `chat-campus-pre-persistence.json`.
 

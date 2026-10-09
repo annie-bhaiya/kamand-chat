@@ -1,7 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canBroadcastMoodle, canManageEvents, canResolveTickets, isCampusRoomAdmin } from '../src/campus-data.js';
+import { canManageEvents, canResolveTickets, isCampusRoomAdmin } from '../src/campus-data.js';
 import { overlaps, timeInMinutes, validDate } from '../src/campus-time.js';
+import { indiaWeekday, menuInputSchema, menuQuerySchema } from '../src/mess-menu.js';
+
+test('mess menu today follows India midnight and weekdays are validated', () => {
+  assert.equal(indiaWeekday(new Date('2026-10-08T18:29:59Z')), 4);
+  assert.equal(indiaWeekday(new Date('2026-10-08T18:30:00Z')), 5);
+  assert.equal(indiaWeekday(new Date('2026-10-11T18:30:00Z')), 1);
+  assert.deepEqual(menuQuerySchema.parse({}), {});
+  assert.equal(menuQuerySchema.parse({ weekday: '7' }).weekday, 7);
+  for (const weekday of ['0', '8', '1.5', 'Friday', ['1', '2']]) assert.throws(() => menuQuerySchema.parse({ weekday }));
+  assert.throws(() => menuInputSchema.parse({ weekday: 5, breakfast: 'A', lunch: 'B', dinner: 'C', day: 'All week' }));
+});
 
 test('campus privileges require a verified institute email, never editable usernames', () => {
   assert.equal(isCampusRoomAdmin('kamandprompt', { email: 'admin@example.com', username: 'admin', email_confirmed_at: 'now' }), false);
@@ -11,8 +22,6 @@ test('campus privileges require a verified institute email, never editable usern
   assert.equal(isCampusRoomAdmin('kamandprompt', coordinator), true);
   assert.equal(isCampusRoomAdmin('robotronics', coordinator), false);
   assert.equal(canManageEvents(coordinator, 'KamandPrompt'), true);
-  assert.equal(canBroadcastMoodle(coordinator, 'IC152'), true);
-  assert.equal(canBroadcastMoodle(coordinator, 'CS302'), false);
   assert.equal(canResolveTickets({ email: 'warden_fake@iitmandi.ac.in', email_confirmed_at: 'now' }, 'hostel', 'Parashar'), false);
 });
 test('campus dates and clock times reject impossible values', () => {

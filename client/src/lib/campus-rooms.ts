@@ -1,5 +1,5 @@
-import { CampusEvent,CampusRoom,CampusTicket,MessDayMenu,MoodleAssignment } from '@/types/chat';
-export type { CampusEvent,CampusRoom,CampusTicket,MessDayMenu,MoodleAssignment };
+import { CampusEvent,CampusRoom,CampusTicket,MessDayMenu } from '@/types/chat';
+export type { CampusEvent,CampusRoom,CampusTicket,MessDayMenu };
 
 // Re-export or define complete rooms list for fast local lookup and rendering
 export const ALL_CAMPUS_ROOMS: CampusRoom[] = [
@@ -280,118 +280,6 @@ export const ALL_CAMPUS_ROOMS: CampusRoom[] = [
     campus: 'Both',
     description: 'National Service Scheme & Ruvaab — village education drives, blood donation camps & local community development.',
     tags: ['Committees', 'NSS', 'SocialService', 'Ruvaab', 'Community'],
-  },
-
-  // 2. COURSES & ACADEMICS
-  {
-    id: 'course-ic110',
-    slug: 'ic110',
-    name: 'IC110 - Electrical Science',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Circuit analysis, network theorems, AC circuits, phasors, magnetic circuits & diodes.',
-    courseCode: 'IC110',
-    tags: ['Core', 'EE', 'Circuits', 'FirstYear'],
-  },
-  {
-    id: 'course-ic152',
-    slug: 'ic152',
-    name: 'IC152 - Computing & Data Science',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Programming in Python, algorithmic thinking, data structures, data analysis with NumPy/Pandas & ML basics.',
-    courseCode: 'IC152',
-    tags: ['Core', 'Computing', 'Python', 'DataScience'],
-  },
-  {
-    id: 'course-ic252',
-    slug: 'ic252',
-    name: 'IC252 - Probability & Statistics',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Probability distributions, random variables, hypothesis testing, Bayes theorem & estimation theory.',
-    courseCode: 'IC252',
-    tags: ['Core', 'Math', 'Probability', 'Statistics'],
-  },
-  {
-    id: 'course-ic160',
-    slug: 'ic160',
-    name: 'IC160 - Applied Mechanics',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Rigid body statics, friction, kinematics, moment of inertia, dynamics of particles & structural systems.',
-    courseCode: 'IC160',
-    tags: ['Core', 'Mechanics', 'Physics', 'Statics'],
-  },
-  {
-    id: 'course-ic221',
-    slug: 'ic221',
-    name: 'IC221 - Physics of Materials',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Solid state physics, crystal structures, band theory, semiconductors, optical and magnetic materials.',
-    courseCode: 'IC221',
-    tags: ['Core', 'Physics', 'Materials', 'Semiconductors'],
-  },
-  {
-    id: 'course-cs302',
-    slug: 'cs302',
-    name: 'CS302 - Database Systems',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Relational algebra, SQL, normalization, transaction processing, concurrency control, B+ trees & indexing.',
-    courseCode: 'CS302',
-    tags: ['CSE', 'DBMS', 'SQL', 'Databases', 'Transactions'],
-  },
-  {
-    id: 'course-ee201',
-    slug: 'ee201',
-    name: 'EE201 - Signals & Systems',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Continuous & discrete-time signals, LTI systems, Fourier analysis, Laplace and Z-transforms.',
-    courseCode: 'EE201',
-    tags: ['EE', 'Signals', 'Fourier', 'Transforms'],
-  },
-  {
-    id: 'course-me301',
-    slug: 'me301',
-    name: 'ME301 - Fluid Mechanics',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Fluid statics, conservation of mass and momentum, Navier-Stokes equations, boundary layers & pipe flow.',
-    courseCode: 'ME301',
-    tags: ['ME', 'Fluids', 'Thermodynamics', 'Flow'],
-  },
-  {
-    id: 'course-ce301',
-    slug: 'ce301',
-    name: 'CE301 - Structural Analysis',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Analysis of statically indeterminate structures, slope deflection, moment distribution & finite elements.',
-    courseCode: 'CE301',
-    tags: ['CE', 'Structures', 'Analysis', 'Trusses'],
-  },
-  {
-    id: 'course-dp201',
-    slug: 'dp201-dp301',
-    name: 'DP201/DP301 - ISTP & Design Practicum',
-    category: 'courses',
-    subcategory: 'Practicum Courses',
-    campus: 'Both',
-    description: 'Interactive Socio-Technical Practicum (ISTP) and Design Practicum — interdisciplinary solutions for Himachal community and technology.',
-    courseCode: 'DP201/301',
-    tags: ['Practicum', 'ISTP', 'Design', 'Innovation', 'Himachal'],
   },
 
   // 3. HOSTELS
@@ -1099,10 +987,6 @@ export function getCategoryBadge(category: CampusRoom['category']) {
   switch (category) {
     case 'clubs':
       return { label: 'Club & Society', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)' };
-    case 'courses':
-      return { label: 'Course (Moodle)', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' };
-    case 'hostels':
-      return { label: 'Hostel Wing', color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)' };
     case 'branches':
       return { label: 'Academic Cohort', color: '#f472b6', bg: 'rgba(244, 114, 182, 0.15)' };
     case 'messes':
@@ -1143,11 +1027,6 @@ export const ROOM_ADMINS: Record<string, string[]> = {
   'rann-neeti': ['b22070', 'admin', 'sports_secy'],
   'e-cell': ['b22085', 'admin'],
   'nss-ruvaab': ['b22090', 'admin'],
-  // Courses
-  'ic152': ['faculty_ic152', 'ta_ic152', 'b23419', 'admin'],
-  'cs302': ['faculty_cs302', 'ta_cs302', 'admin'],
-  'ee201': ['faculty_ee201', 'ta_ee201', 'admin'],
-  'ic110': ['faculty_ic110', 'ta_ic110', 'admin'],
   // Hostels
   'b18-chat': ['warden_surajtaal', 'caretaker_b18', 'admin'],
   'suraj-taal-general': ['warden_surajtaal', 'admin'],

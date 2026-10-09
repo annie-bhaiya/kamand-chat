@@ -148,14 +148,14 @@ export const CampusTicketDrawer: React.FC<CampusTicketDrawerProps> = ({
   if (!isOpen) return null;
 
   return <Modal isOpen={isOpen} onClose={onClose} title="Campus maintenance" description="Report an issue, follow its progress, and support reports that affect you." maxWidth={840}>
-    <div className="campus-tool">
+    <div className="campus-tool maintenance-workspace">
       <p className="campus-demo-notice">Reports are shared with your hostel or mess. Assigned caretakers and managers can update their progress.</p>
-      <div className="campus-toolbar">
+      <div className="campus-toolbar ticket-toolbar">
         <label>Status<select className="input-control" value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All statuses</option>{['Reported', 'Under Investigation', 'Resolved by Warden/Caretaker'].map(status => <option key={status}>{status}</option>)}</select></label>
         <div className="campus-tabs" aria-label="Issue scope">{(['all', 'hostel', 'mess'] as const).map(value => <button key={value} className="btn btn-ghost" aria-pressed={activeScope === value} onClick={() => setActiveScope(value)}>{value === 'all' ? 'All issues' : value === 'hostel' ? 'Hostels' : 'Messes'}</button>)}</div>
-        <button className="btn btn-primary" onClick={() => setShowSubmitForm(value => !value)}><Plus size={16}/>{showSubmitForm ? 'Close form' : 'Report an issue'}</button>
+        <button className="btn btn-filled" data-tone="maintenance" onClick={() => setShowSubmitForm(value => !value)}><Plus size={16}/>{showSubmitForm ? 'Close form' : 'Report an issue'}</button>
       </div>
-      {showSubmitForm && <form onSubmit={handleSubmitTicket} className="campus-form">
+      {showSubmitForm && <form onSubmit={handleSubmitTicket} className="campus-form ticket-form">
         <h4>Report an issue</h4>
         <label>Title<input className="input-control" required minLength={5} maxLength={160} value={title} onChange={e => setTitle(e.target.value)} placeholder="What needs attention?"/></label>
         <label>Description<textarea className="input-control" value={description} onChange={e => setDescription(e.target.value)} rows={3}/></label>
@@ -166,12 +166,12 @@ export const CampusTicketDrawer: React.FC<CampusTicketDrawerProps> = ({
           <label>Specific location<input className="input-control" required minLength={2} value={specificLocation} onChange={e => setSpecificLocation(e.target.value)} placeholder="Block, room or table"/></label>
           <label>Category<select className="input-control" value={category} onChange={e => setCategory(e.target.value)}>{['Wi-Fi Dropouts', 'Electrical', 'Plumbing', 'Geyser', 'Food Quality', 'Hygiene', 'Other'].map(value => <option key={value}>{value}</option>)}</select></label>
         </div>
-        <button className="btn btn-primary" disabled={submitting} type="submit">{submitting ? 'Saving…' : 'Save report'}</button>
+        <div className="ticket-form-actions"><button className="btn btn-filled" data-tone="maintenance" disabled={submitting} type="submit">{submitting ? 'Saving…' : 'Save report'}</button></div>
       </form>}
       {loading ? <p className="campus-state" role="status">Loading reports…</p> : !tickets.length ? <p className="campus-state">No issues in this view.</p> : <div className="campus-records">{tickets.map(ticket => <article key={ticket.id} className="campus-record campus-ticket">
         <button className="ticket-vote" disabled={busyIds.has(ticket.id)} aria-pressed={ticket.upvotedBy.includes(user?.id || '')} onClick={() => handleUpvote(ticket.id)} aria-label={`Support ${ticket.title}, ${ticket.upvotes} votes`}><ChevronUp size={18}/><strong>{ticket.upvotes}</strong><span>votes</span></button>
         <div className="campus-record-body">
-          <div className="campus-record-meta"><span>{ticket.category}</span><span className="campus-status">{ticket.status}</span></div>
+          <div className="campus-record-meta"><span>{ticket.category}</span><span className="campus-status" data-status={ticket.status}>{ticket.status}</span></div>
           <h4>{ticket.title}</h4><p>{ticket.description}</p>
           <p className="campus-record-meta"><MapPin size={14}/>{ticket.clusterOrMess} · {ticket.specificLocation} · {ticket.campus}</p>
           <small>Reported by {ticket.creatorName}</small>

@@ -15,7 +15,7 @@ const event: CampusEvent = { id: 'event', title: 'Workshop', description: 'Learn
 const ticket: CampusTicket = { id: 'ticket', title: 'Hallway light repair', description: 'Light is not working', scope: 'hostel', category: 'Electrical', campus: 'North', clusterOrMess: 'Parashar', specificLocation: 'P2 hallway', status: 'Reported', upvotes: 1, upvotedBy: ['resident'], createdBy: 'resident', creatorName: 'Resident', createdAt: '2026-10-09T10:00:00Z', canManage: false };
 beforeEach(() => {
   harness.listeners.clear();
-  vi.spyOn(api, 'getCampusRoomPermissions').mockResolvedValue({ data: { roomSlug: 'kamandprompt', isAdmin: true, canBookEvents: true, canResolveTickets: false, canBroadcastMoodle: false, canUpdateMenu: false } });
+  vi.spyOn(api, 'getCampusRoomPermissions').mockResolvedValue({ data: { roomSlug: 'kamandprompt', isAdmin: true, canBookEvents: true, canResolveTickets: false, canUpdateMenu: false } });
 });
 
 it('a conflicting approval keeps the saved status and explains why approval failed', async () => {

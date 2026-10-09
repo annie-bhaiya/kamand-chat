@@ -13,7 +13,6 @@ getOtherMember,
 import {
 Calendar,
 ChevronLeft,
-GraduationCap,
 Info,
 Search,
 ShieldCheck,
@@ -22,6 +21,7 @@ UtensilsCrossed,
 Wrench
 } from 'lucide-react';
 import React from 'react';
+import { ChatContextTools } from './ChatContextTools';
 
 interface ChatHeaderProps {
   onBackMobile: () => void;
@@ -29,7 +29,6 @@ interface ChatHeaderProps {
   onOpenInfo: () => void;
   onOpenCalendar?: (organizer?: string, isAdmin?: boolean) => void;
   onOpenTickets?: (scope?: 'hostel' | 'mess', clusterOrMess?: string, isAdmin?: boolean) => void;
-  onOpenMoodle?: (courseCode?: string, isAdmin?: boolean) => void;
   onOpenMessMenu?: (messSlug?: string, isAdmin?: boolean) => void;
 }
 
@@ -39,7 +38,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onOpenInfo,
   onOpenCalendar,
   onOpenTickets,
-  onOpenMoodle,
   onOpenMessMenu,
 }) => {
   const { activeConversation, typingUserIds } = useChat();
@@ -97,7 +95,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   }
 
   return (
-    <div className="chat-header">
+    <div className={`chat-header${campusRoom ? ' has-campus-tools' : ''}`}>
       <div className="chat-header-info">
         {/* Mobile back arrow */}
         <button
@@ -122,7 +120,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             style={{ cursor: 'pointer' }}
             title="View user profile, search & attachments"
           >
-            <Avatar name={avatarName} src={avatarKey} size="md" />
+            <Avatar name={avatarName} src={avatarKey} size="sm" />
           </div>
         ) : campusRoom ? (
           <div
@@ -133,9 +131,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
             }}
             style={{
-              width: 40,
-              height: 40,
-              minWidth: 40,
+              width: 32,
+              height: 32,
+              minWidth: 32,
               borderRadius: '12px',
               background: 'var(--accent)',
               border: '1px solid var(--accent-light)',
@@ -161,8 +159,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenInfo(); }
             }}
             style={{
-              width: 40,
-              height: 40,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               background: 'var(--accent)',
               display: 'flex',
@@ -187,11 +185,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           style={{ cursor: 'pointer' }}
           title={isDirect ? "View user profile, search & attachments" : "View group profile, search & attachments"}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="chat-title-line">
             <h2 className="chat-title">{title}</h2>
             {campusRoom && (
               <span
-                style={{
+                className="chat-room-badge" style={{
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   padding: '2px 8px',
@@ -206,7 +204,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             )}
             {!isDirect && isRoomAdmin && (
               <span
-                style={{
+                className="chat-admin-badge" style={{
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   padding: '2px 8px',
@@ -214,9 +212,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                   backgroundColor: 'var(--warning-light)',
                   color: 'var(--warning)',
                   border: '1px solid var(--warning-light)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
                 }}
                 title="You have administrative privileges in this room"
               >
@@ -235,31 +230,21 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       </div>
 
-      <div className="chat-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className="chat-header-actions">
         {/* Contextual Action Buttons for Scoped Campus Rooms */}
         {campusRoom && (
-          <>
+          <ChatContextTools>
             {/* Clubs & Branches & Fests: Calendar & Venue Booking */}
             {(campusRoom.category === 'clubs' || campusRoom.category === 'branches') && onOpenCalendar && (
               <button
                 onClick={() => onOpenCalendar(campusRoom.name, isRoomAdmin)}
-                className="btn btn-secondary"
+                className="btn btn-tonal"
+                data-tone="calendar"
+                aria-label="Unified Gymkhana Calendar & Venue Bookings"
                 title="Unified Gymkhana Calendar & Venue Bookings"
               >
-                <Calendar size={14} className="text-[var(--accent)]" />
+                <Calendar size={18} aria-hidden="true" />
                 <span className="hidden-mobile">Gymkhana Calendar</span>
-              </button>
-            )}
-
-            {/* Courses: Moodle LMS Sync & Assignments */}
-            {campusRoom.category === 'courses' && onOpenMoodle && (
-              <button
-                onClick={() => onOpenMoodle(campusRoom.courseCode || 'IC152', isRoomAdmin)}
-                className="btn btn-secondary"
-                title="Moodle LMS Assignments & Webhook Sync"
-              >
-                <GraduationCap size={14} className="text-[var(--accent)]" />
-                <span className="hidden-mobile">Moodle LMS</span>
               </button>
             )}
 
@@ -269,10 +254,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 onClick={() =>
                   onOpenTickets('hostel', campusRoom.hostelCluster || campusRoom.name, isRoomAdmin)
                 }
-                className="btn btn-secondary"
+                className="btn btn-tonal"
+                data-tone="maintenance"
+                aria-label="Hostel Problem & Maintenance Tickets"
                 title="Hostel Problem & Maintenance Tickets"
               >
-                <Wrench size={14} className="text-[var(--accent)]" />
+                <Wrench size={18} aria-hidden="true" />
                 <span className="hidden-mobile">Hostel Complaints</span>
               </button>
             )}
@@ -283,32 +270,37 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 {onOpenMessMenu && (
                   <button
                     onClick={() => onOpenMessMenu(campusRoom.slug, isRoomAdmin)}
-                    className="btn btn-secondary"
+                    className="btn btn-tonal"
+                    data-tone="dining"
+                    aria-label="Daily Mess Menu & Rebate Portal"
                     title="Daily Mess Menu & Rebate Portal"
                   >
-                    <UtensilsCrossed size={14} className="text-[var(--accent)]" />
+                    <UtensilsCrossed size={18} aria-hidden="true" />
                     <span className="hidden-mobile">Mess Menu</span>
                   </button>
                 )}
                 {onOpenTickets && (
                   <button
                     onClick={() => onOpenTickets('mess', campusRoom.name, isRoomAdmin)}
-                    className="btn btn-secondary"
+                    className="btn btn-tonal"
+                    data-tone="maintenance"
+                    aria-label="Report Mess Shortage or Food Quality Issue"
                     title="Report Mess Shortage or Food Quality Issue"
                   >
-                    <Wrench size={14} className="text-[var(--accent)]" />
+                    <Wrench size={18} aria-hidden="true" />
                     <span className="hidden-mobile">Mess Issues</span>
                   </button>
                 )}
               </>
             )}
-          </>
+          </ChatContextTools>
         )}
 
         {/* Search messages */}
         <button
           onClick={onOpenSearch}
           className="btn-icon btn-ghost"
+          aria-label="Search in conversation"
           title="Search in conversation"
         >
           <Search size={18} />
@@ -318,6 +310,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button
           onClick={onOpenInfo}
           className="btn-icon btn-ghost"
+          aria-label={isDirect ? "User profile, search & attachments" : "Group info, search & attachments"}
           title={isDirect ? "User profile, search & attachments" : "Group info, search & attachments"}
         >
           <Info size={18} />

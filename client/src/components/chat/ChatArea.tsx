@@ -7,7 +7,7 @@ import { useChat } from '@/context/ChatContext';
 import { getConversationMembers, getMemberProfile, getOtherMember } from '@/lib/utils';
 import { Profile } from '@/types/chat';
 import {
-MessageSquare,
+Calendar, UtensilsCrossed, MessageSquare,
 Plus,
 } from 'lucide-react';
 import React,{ useState } from 'react';
@@ -21,7 +21,6 @@ interface ChatAreaProps {
   onOpenNewChat: () => void;
   onOpenCalendar?: (organizer?: string, isAdmin?: boolean) => void;
   onOpenTickets?: (scope?: 'hostel' | 'mess', clusterOrMess?: string, isAdmin?: boolean) => void;
-  onOpenMoodle?: (courseCode?: string, isAdmin?: boolean) => void;
   onOpenMessMenu?: (messSlug?: string, isAdmin?: boolean) => void;
 }
 
@@ -30,7 +29,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   onOpenNewChat,
   onOpenCalendar,
   onOpenTickets,
-  onOpenMoodle,
   onOpenMessMenu,
 }) => {
   const {
@@ -64,9 +62,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           <p className="empty-state-desc">Find your people, share a thought, or make a plan. Choose a conversation or start something new.</p>
           <button onClick={onOpenNewChat} className="btn btn-primary"><Plus size={17} />New conversation</button>
           <div className="welcome-tools">
-            <button onClick={() => onOpenCalendar?.()} className="btn btn-ghost">Campus calendar</button>
+            <button onClick={() => onOpenCalendar?.()} className="btn btn-tonal" data-tone="calendar"><Calendar size={17} aria-hidden="true" />Campus calendar</button>
             {!profile?.chat_only && (
-              <button onClick={() => onOpenMessMenu?.()} className="btn btn-ghost">Today’s mess menu</button>
+              <button onClick={() => onOpenMessMenu?.()} className="btn btn-tonal" data-tone="dining"><UtensilsCrossed size={17} aria-hidden="true" />Today’s mess menu</button>
             )}
           </div>
         </div>
@@ -86,7 +84,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         onOpenInfo={() => setIsInfoOpen(true)}
         onOpenCalendar={onOpenCalendar}
         onOpenTickets={onOpenTickets}
-        onOpenMoodle={onOpenMoodle}
         onOpenMessMenu={onOpenMessMenu}
       />
 

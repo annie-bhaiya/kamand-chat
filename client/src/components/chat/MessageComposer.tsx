@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Attachment } from '@/types/chat';
 import {
 FileText,
+LoaderCircle,
 Image as ImageIcon,
 Paperclip,
 Send,
@@ -33,6 +34,8 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const emojiTriggerRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -40,6 +43,19 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   useEffect(() => () => {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!pickerRef.current?.contains(event.target as Node) && !emojiTriggerRef.current?.contains(event.target as Node)) setShowEmojiPicker(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setShowEmojiPicker(false); emojiTriggerRef.current?.focus(); }
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', escape); };
+  }, [showEmojiPicker]);
 
   // Resize textarea automatically
   useEffect(() => {
@@ -160,6 +176,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               <button
                 onClick={() => handleRemoveDraft(att)}
                 className="draft-remove"
+                aria-label={`Remove ${att.original_name}`}
                 title="Remove attachment"
                 type="button"
               >
@@ -172,7 +189,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
       {/* Emoji Picker Popover */}
       {showEmojiPicker && (
-        <div className="emoji-popover">
+        <div ref={pickerRef} id="composer-emoji-picker" className="emoji-popover" role="group" aria-label="Choose an emoji">
           {COMMON_EMOJIS.map((emoji) => (
             <button
               key={emoji}
@@ -201,10 +218,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isSending}
-          className="btn-icon btn-ghost"
+          className="btn-icon btn-tonal"
+          data-tone="learning"
+          aria-label={isUploading ? "Uploading attachment" : "Attach file or image"}
+          aria-busy={isUploading}
           title="Upload file or image (up to 10MB)"
         >
-          <Paperclip size={18} />
+          {isUploading ? <LoaderCircle size={18} className="animate-spin" /> : <Paperclip size={18} />}
         </button>
 
         {/* Text input */}
@@ -226,8 +246,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         {/* Emoji trigger button */}
         <button
           type="button"
+          ref={emojiTriggerRef}
+          disabled={isSending}
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="btn-icon btn-ghost"
+          className="btn-icon btn-tonal"
+          data-tone="dining"
+          aria-controls="composer-emoji-picker"
           aria-label="Add emoji"
           aria-expanded={showEmojiPicker}
           title="Add emoji"
@@ -245,10 +269,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             (!text.trim() && draftAttachments.length === 0)
           }
           className="composer-btn-send"
-          aria-label="Send message"
+          aria-label={isSending ? "Sending message" : "Send message"}
+          aria-busy={isSending}
           title="Send message"
         >
-          <Send size={16} />
+          {isSending ? <LoaderCircle size={18} className="animate-spin" /> : <Send size={18} />}
         </button>
       </div>
     </div>

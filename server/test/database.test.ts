@@ -36,7 +36,14 @@ before(async () => {
     grant select,insert,delete on storage.objects to authenticated;
   `);
   const directory = new URL('../supabase/migrations/', import.meta.url);
-  for (const file of (await readdir(directory)).filter(x => x.endsWith('.sql')).sort()) await db.exec(await readFile(new URL(file, directory), 'utf8'));
+  for (const file of (await readdir(directory)).filter(x => x.endsWith('.sql')).sort()) {
+    if (file.endsWith('_mess_menu_weekdays.sql')) {
+      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      const imported = Object.fromEntries(['breakfast','lunch','dinner'].map(meal => [meal, days.map(day => `${day}: ${day} ${meal}`).join('\n') + '\n\nDaily: shared items.']));
+      await db.query('insert into public.mess_menus(room_slug,menu) values($1,$2)', ['alder-mess', JSON.stringify({ ...imported, specialNotice: 'Original notes' })]);
+    }
+    await db.exec(await readFile(new URL(file, directory), 'utf8'));
+  }
   for (const [id, session] of sessions) {
     await db.query('insert into auth.users(id,raw_user_meta_data) values($1,$2)', [id, JSON.stringify({ display_name: id === alice ? 'Alice' : id === bob ? 'Bob' : 'Eve' })]);
     await db.query('insert into auth.sessions(id,user_id) values($1,$2)', [session, id]);
@@ -46,10 +53,33 @@ after(async () => { await db.close(); });
 
 test('migration enables RLS on every application table and exposes no public SECURITY DEFINER functions', async () => {
   const tables = await db.query<{ relrowsecurity: boolean }>("select relrowsecurity from pg_class c join pg_namespace n on c.relnamespace=n.oid where n.nspname='public' and c.relkind='r'");
-  assert.equal(tables.rows.length, 12);
+  assert.equal(tables.rows.length, 13);
   assert.ok(tables.rows.every(x => x.relrowsecurity));
   const functions = await db.query("select p.proname from pg_proc p join pg_namespace n on p.pronamespace=n.oid where n.nspname='public' and p.prosecdef");
   assert.equal(functions.rows.length, 0);
+});
+
+test('weekly menu import becomes seven isolated weekday records with shared items intact', async () => {
+  const rows = (await db.query<{ weekday: number; breakfast: string; lunch: string; special_notice: string }>("select * from public.mess_menu_days where room_slug='alder-mess' order by weekday")).rows;
+  assert.equal(rows.length, 7);
+  assert.equal(rows[0]!.breakfast, 'Monday breakfast\nAlso included: shared items.');
+  assert.equal(rows[4]!.lunch, 'Friday lunch\nAlso included: shared items.');
+  assert.equal(rows[6]!.special_notice, 'Original notes');
+  await assert.rejects(db.query("insert into public.mess_menu_days(room_slug,weekday,breakfast,lunch,dinner) values('alder-mess',8,'A','B','C')"), /check constraint/);
+  await db.query("update public.mess_menu_days set lunch='Updated Friday lunch' where room_slug='alder-mess' and weekday=5");
+  const thursday = await db.query<{ lunch: string }>("select lunch from public.mess_menu_days where room_slug='alder-mess' and weekday=4");
+  assert.equal(thursday.rows[0]!.lunch, 'Thursday lunch\nAlso included: shared items.');
+});
+
+test('weekday menu writes are limited to the assigned mess manager', async () => {
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, JSON.stringify({ campus_rooms: ['pine-mess'] })]);
+  const insert = 'insert into public.mess_menu_days(room_slug,weekday,breakfast,lunch,dinner,updated_by) values($1,5,$2,$2,$2,$3)';
+  await asUser(bob, insert, ['pine-mess', 'Vegetarian meal', bob]);
+  assert.equal((await asUser(alice, "select * from public.mess_menu_days where room_slug='pine-mess' and weekday=5")).length, 1);
+  await assert.rejects(asUser(alice, insert, ['oak-mess', 'Meal', alice]), /row-level security/);
+  await assert.rejects(asUser(bob, insert, ['oak-mess', 'Meal', bob]), /row-level security/);
+  await assert.rejects(asUser(bob, "update public.mess_menu_days set updated_by=$1 where room_slug='pine-mess'", [alice]), /row-level security/);
+  await db.query('update auth.users set raw_app_meta_data=$2 where id=$1', [bob, '{}']);
 });
 test('signup trigger creates a profile with a safe unique username', async () => {
   const rows = await asUser(alice, 'select * from public.profiles where id=$1', [alice]);

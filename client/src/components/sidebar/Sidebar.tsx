@@ -20,7 +20,6 @@ import {
 } from '@/lib/utils';
 import { CampusRoom } from '@/types/chat';
 import {
-  BookOpen,
   Building,
   Calendar,
   Check,
@@ -28,6 +27,7 @@ import {
   Lock,
   MessageSquare,
   Plus,
+  Pencil,
   Search,
   Settings,
   Trophy,
@@ -44,18 +44,16 @@ interface SidebarProps {
   onCloseMobile?: () => void;
   onOpenCalendar?: (organizer?: string) => void;
   onOpenTickets?: (scope?: 'hostel' | 'mess', clusterOrMess?: string) => void;
-  onOpenMoodle?: (courseCode?: string) => void;
   onOpenMessMenu?: (messSlug?: string) => void;
 }
 
-type MainTab = 'dms' | 'clubs' | 'courses' | 'hostels' | 'branches' | 'messes';
+type MainTab = 'dms' | 'clubs' | 'hostels' | 'branches' | 'messes';
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = true,
   onCloseMobile,
   onOpenCalendar,
   onOpenTickets,
-  onOpenMoodle,
   onOpenMessMenu,
 }) => {
   const {
@@ -133,20 +131,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       rooms = rooms.filter((r) => user?.app_metadata?.campus_rooms?.includes(r.slug) || isUserMessRoom(r, profile.mess));
     }
 
-    // Apply subfilters for open categories (clubs, courses)
+    // Apply subfilters for clubs
     if (subFilter !== 'all') {
       if (mainTab === 'clubs') {
         rooms = rooms.filter((r) =>
           r.subcategory.toLowerCase().includes(subFilter.toLowerCase())
         );
-      } else if (mainTab === 'courses') {
-        if (subFilter === 'core') {
-          rooms = rooms.filter((r) => r.subcategory.includes('Institute Core'));
-        } else if (subFilter === 'dept') {
-          rooms = rooms.filter((r) => r.subcategory.includes('Department Core'));
-        } else if (subFilter === 'practicum') {
-          rooms = rooms.filter((r) => r.subcategory.includes('Practicum'));
-        }
       }
     }
 
@@ -158,8 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           r.name.toLowerCase().includes(q) ||
           r.slug.toLowerCase().includes(q) ||
           r.subcategory.toLowerCase().includes(q) ||
-          (r.courseCode && r.courseCode.toLowerCase().includes(q)) ||
-          r.tags.some((t) => t.toLowerCase().includes(q))
+                    r.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
 
@@ -246,15 +235,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const getRoomIcon = (cat: CampusRoom['category']) => {
       switch (cat) {
         case 'clubs':
-          return <Trophy size={16} className="text-[var(--accent)]" />;
-        case 'courses':
-          return <BookOpen size={16} className="text-[var(--accent)]" />;
+          return <Trophy size={16} className="tone-icon" data-tone="calendar" />;
         case 'hostels':
-          return <Building size={16} className="text-[var(--accent)]" />;
+          return <Building size={16} className="tone-icon" data-tone="maintenance" />;
         case 'branches':
-          return <GraduationCap size={16} className="text-[var(--accent)]" />;
+          return <GraduationCap size={16} className="tone-icon" data-tone="learning" />;
         case 'messes':
-          return <UtensilsCrossed size={16} className="text-[var(--accent)]" />;
+          return <UtensilsCrossed size={16} className="tone-icon" data-tone="dining" />;
       }
     };
 
@@ -310,18 +297,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Quick Utility Launchers Bar */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: profile?.chat_only ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-              gap: '6px',
-              padding: '4px 16px 10px',
-              borderBottom: '1px solid var(--border-subtle)',
-            }}
-          >
+          <div className="sidebar-utilities" data-chat-only={profile?.chat_only || undefined}>
             <button
               onClick={() => onOpenCalendar?.()}
-              className="btn btn-secondary sidebar-tool"
+              className="btn btn-tonal sidebar-tool"
+              data-tone="calendar"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -333,7 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               title="Unified Gymkhana Calendar & Venue Bookings"
             >
-              <Calendar size={14} className="text-[var(--accent)]" />
+              <Calendar size={18} aria-hidden="true" />
               <span>Calendar</span>
             </button>
 
@@ -346,7 +326,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
                   onOpenTickets?.('hostel', profile?.hostel || undefined);
                 }}
-                className="btn btn-secondary sidebar-tool"
+                className="btn btn-tonal sidebar-tool"
+              data-tone="maintenance"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -358,33 +339,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 title="Hostel & Mess Maintenance Tickets"
               >
-                <Wrench size={14} className="text-[var(--accent)]" />
+                <Wrench size={18} aria-hidden="true" />
                 <span>Tickets</span>
               </button>
             )}
 
-            <button
-              onClick={() => onOpenMoodle?.()}
-              className="btn btn-secondary sidebar-tool"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '6px 4px',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                gap: '4px',
-              }}
-              title="IIT Mandi Moodle LMS Sync"
-            >
-              <GraduationCap size={14} className="text-[var(--accent)]" />
-              <span>Moodle</span>
-            </button>
+
 
             {!profile?.chat_only && (
               <button
                 onClick={() => onOpenMessMenu?.(profile?.mess || undefined)}
-                className="btn btn-secondary sidebar-tool"
+                className="btn btn-tonal sidebar-tool"
+              data-tone="dining"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -396,31 +362,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 title="Mess Menus & Rebate Portal"
               >
-                <UtensilsCrossed size={14} className="text-[var(--accent)]" />
+                <UtensilsCrossed size={18} aria-hidden="true" />
                 <span>Messes</span>
               </button>
             )}
           </div>
 
           {/* Category Switcher Navigation Tabs */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '8px 14px 4px',
-              gap: '4px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <nav className="sidebar-sections" aria-label="Campus navigation">
             <button
               onClick={() => {
                 setMainTab('dms');
                 setSubFilter('all');
               }}
               className={`nav-pill ${mainTab === 'dms' ? 'active' : ''}`}
+                  data-tone="primary"
+                  aria-pressed={mainTab === 'dms'}
               style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
             >
-              Chats ({conversations.length})
+              <MessageSquare size={15} aria-hidden="true" />Chats ({conversations.length})
             </button>
             <button
               onClick={() => {
@@ -428,20 +388,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 setSubFilter('all');
               }}
               className={`nav-pill ${mainTab === 'clubs' ? 'active' : ''}`}
+                  data-tone="calendar"
+                  aria-pressed={mainTab === 'clubs'}
               style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
             >
-              Clubs
+              <Trophy size={15} aria-hidden="true" />Clubs
             </button>
-            <button
-              onClick={() => {
-                setMainTab('courses');
-                setSubFilter('all');
-              }}
-              className={`nav-pill ${mainTab === 'courses' ? 'active' : ''}`}
-              style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
-            >
-              Courses
-            </button>
+
 
             {/* When Chat-Only mode is enabled, Hostels, Branches, and Messes are hidden */}
             {!profile?.chat_only && (
@@ -452,9 +405,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setSubFilter('all');
                   }}
                   className={`nav-pill ${mainTab === 'hostels' ? 'active' : ''}`}
+                  data-tone="maintenance"
+                  aria-pressed={mainTab === 'hostels'}
                   style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
                 >
-                  Hostels
+                  <Building size={15} aria-hidden="true" />Hostels
                 </button>
                 <button
                   onClick={() => {
@@ -462,9 +417,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setSubFilter('all');
                   }}
                   className={`nav-pill ${mainTab === 'branches' ? 'active' : ''}`}
+                  data-tone="learning"
+                  aria-pressed={mainTab === 'branches'}
                   style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
                 >
-                  Branches
+                  <GraduationCap size={15} aria-hidden="true" />Branches
                 </button>
                 <button
                   onClick={() => {
@@ -472,20 +429,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setSubFilter('all');
                   }}
                   className={`nav-pill ${mainTab === 'messes' ? 'active' : ''}`}
+                  data-tone="dining"
+                  aria-pressed={mainTab === 'messes'}
                   style={{ whiteSpace: 'nowrap', padding: '5px 10px', fontSize: '0.8rem' }}
                 >
-                  Messes
+                  <UtensilsCrossed size={15} aria-hidden="true" />Messes
                 </button>
               </>
             )}
-          </div>
+          </nav>
 
           {/* Sub-Filters / Status Badges for Selected Category */}
-          <div style={{ display: 'flex', padding: '2px 16px 8px', gap: '6px', overflowX: 'auto', alignItems: 'center' }}>
+          <div className="sidebar-filters" aria-label="Current view filters">
             {mainTab === 'dms' && (
               <>
                 <button
                   className={`nav-pill ${filterType === 'all' ? 'active' : ''}`}
+                  aria-pressed={filterType === 'all'}
                   onClick={() => setFilterType('all')}
                   style={{ fontSize: '0.8rem', padding: '3px 8px' }}
                 >
@@ -493,6 +453,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
                 <button
                   className={`nav-pill ${filterType === 'direct' ? 'active' : ''}`}
+                  aria-pressed={filterType === 'direct'}
                   onClick={() => setFilterType('direct')}
                   style={{ fontSize: '0.8rem', padding: '3px 8px' }}
                 >
@@ -500,6 +461,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
                 <button
                   className={`nav-pill ${filterType === 'group' ? 'active' : ''}`}
+                  aria-pressed={filterType === 'group'}
                   onClick={() => setFilterType('group')}
                   style={{ fontSize: '0.8rem', padding: '3px 8px' }}
                 >
@@ -513,7 +475,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {['all', 'SnTC', 'SAC', 'Sports', 'Fest'].map((f) => (
                   <button
                     key={f}
-                    className={`nav-pill ${subFilter === f ? 'active' : ''}`}
+                    className={`nav-pill ${subFilter === f ? 'active' : ''}`} aria-pressed={subFilter === f}
                     onClick={() => setSubFilter(f)}
                     style={{ fontSize: '0.8rem', padding: '3px 8px' }}
                   >
@@ -523,59 +485,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </>
             )}
 
-            {mainTab === 'courses' && (
-              <>
-                {[
-                  { id: 'all', label: 'All Courses' },
-                  { id: 'core', label: 'Institute Core' },
-                  { id: 'dept', label: 'Dept Core' },
-                  { id: 'practicum', label: 'Practicum' },
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    className={`nav-pill ${subFilter === f.id ? 'active' : ''}`}
-                    onClick={() => setSubFilter(f.id)}
-                    style={{ fontSize: '0.8rem', padding: '3px 8px' }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </>
-            )}
-
             {/* For Hostels, Branches, and Messes: show enrolled identification badge */}
             {mainTab === 'hostels' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', width: '100%', justifyContent: 'space-between' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+              <div className="cohort-selection">
+                <span className="cohort-selection-badge" data-tone="maintenance">
                   <Building size={12} />
                   <span>{profile?.hostel ? `${profile.hostel}${profile.hostel_block ? ` (${profile.hostel_block})` : ''}` : 'Unassigned'}</span>
                 </span>
-                <button onClick={openSettings} className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px', color: 'var(--accent)', cursor: 'pointer' }}>
-                  Change &rarr;
+                <button type="button" onClick={openSettings} className="btn btn-secondary cohort-change" aria-label="Change hostel">
+                  <Pencil size={14} aria-hidden="true" />Change
                 </button>
               </div>
             )}
 
             {mainTab === 'branches' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', width: '100%', justifyContent: 'space-between' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, maxWidth: '210px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div className="cohort-selection">
+                <span className="cohort-selection-badge" data-tone="learning">
                   <GraduationCap size={12} />
                   <span>{userBranchInfo?.name || profile?.branch || 'Unassigned'}</span>
                 </span>
-                <button onClick={openSettings} className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px', color: 'var(--accent)', cursor: 'pointer' }}>
-                  Change &rarr;
+                <button type="button" onClick={openSettings} className="btn btn-secondary cohort-change" aria-label="Change branch">
+                  <Pencil size={14} aria-hidden="true" />Change
                 </button>
               </div>
             )}
 
             {mainTab === 'messes' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', width: '100%', justifyContent: 'space-between' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'var(--warning-light)', color: 'var(--warning)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, maxWidth: '210px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div className="cohort-selection">
+                <span className="cohort-selection-badge" data-tone="dining">
                   <UtensilsCrossed size={12} />
                   <span>{profile?.mess || 'Unassigned'}</span>
                 </span>
-                <button onClick={openSettings} className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px', color: 'var(--warning)', cursor: 'pointer' }}>
-                  Change &rarr;
+                <button type="button" onClick={openSettings} className="btn btn-secondary cohort-change" aria-label="Change mess">
+                  <Pencil size={14} aria-hidden="true" />Change
                 </button>
               </div>
             )}
@@ -774,7 +716,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <GraduationCap size={32} style={{ color: 'var(--accent)', margin: '0 auto 10px' }} />
                       <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Branch Not Configured</h4>
                       <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.4 }}>
-                        Set your enrolled academic branch in Settings to view your cohort room and Moodle coursework sync.
+                        Set your enrolled academic branch in Settings to view your cohort room.
                       </p>
                       <button onClick={openSettings} className="btn btn-primary" style={{ fontSize: '0.82rem', padding: '6px 14px', borderRadius: '8px' }}>
                         Configure in Settings
@@ -824,28 +766,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
 
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>
-                        Official student cohort channel for CR coordination, academic calendar, and Moodle course sync.
+                        Official student cohort channel for CR coordination, and the academic calendar.
                       </p>
 
                       {/* Quick Options */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                        <button
-                          onClick={() => onOpenMoodle?.()}
-                          className="btn btn-secondary"
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '7px 10px',
-                            fontSize: '0.78rem',
-                            borderRadius: '8px',
-                            justifyContent: 'center',
-                          }}
-                          title="Sync Moodle courses & deadlines"
-                        >
-                          <BookOpen size={13} className="text-[var(--accent)]" />
-                          <span>Moodle LMS</span>
-                        </button>
+
                         <button
                           onClick={() => onOpenCalendar?.()}
                           className="btn btn-secondary"
@@ -922,7 +848,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
 
                       <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4, margin: 0 }}>
-                        Daily 4-meal catering, food committee feedback, and leaves/rebates for {profile.mess}.
+                        Daily meals, food committee feedback, and leaves/rebates for {profile.mess}.
                       </p>
 
                       {/* Quick Options */}

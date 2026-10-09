@@ -2,12 +2,11 @@ export interface CampusRoomDef {
   id: string;
   slug: string;
   name: string;
-  category: 'clubs' | 'courses' | 'hostels' | 'branches' | 'messes';
+  category: 'clubs' | 'hostels' | 'branches' | 'messes';
   subcategory: string;
   campus?: 'North' | 'South' | 'Both';
   description: string;
   tags: string[];
-  courseCode?: string;
   hostelCluster?: string;
   hostelBlock?: string;
 }
@@ -52,24 +51,12 @@ export interface CampusTicket {
   resolvedAt?: string | null;
 }
 
-export interface MoodleAssignment {
-  id: string;
-  courseCode: string;
-  title: string;
-  description: string;
-  type: 'assignment' | 'quiz' | 'lab' | 'grade' | 'announcement';
-  dueDate: string;
-  weightage?: string;
-  moodleUrl: string;
-  status: 'pending' | 'submitted' | 'graded';
-}
 
 export interface MessDayMenu {
   messName: string;
   day: string;
   breakfast: string;
   lunch: string;
-  snacks: string;
   dinner: string;
   specialNotice?: string;
 }
@@ -353,123 +340,6 @@ export const CAMPUS_ROOMS: CampusRoomDef[] = [
     campus: 'Both',
     description: 'National Service Scheme & Ruvaab — village education drives, blood donation camps & local community development in Kamand valley.',
     tags: ['Committees', 'NSS', 'SocialService', 'Ruvaab', 'Community'],
-  },
-
-  // 2. COURSES & ACADEMICS
-  // Foundation / Institute Core
-  {
-    id: 'course-ic110',
-    slug: 'ic110',
-    name: 'IC110 - Electrical Science',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Circuit analysis, network theorems, AC circuits, phasors, magnetic circuits & diodes.',
-    courseCode: 'IC110',
-    tags: ['Core', 'EE', 'Circuits', 'FirstYear'],
-  },
-  {
-    id: 'course-ic152',
-    slug: 'ic152',
-    name: 'IC152 - Computing & Data Science',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Programming in Python, algorithmic thinking, data structures, data analysis with NumPy/Pandas & ML basics.',
-    courseCode: 'IC152',
-    tags: ['Core', 'Computing', 'Python', 'DataScience'],
-  },
-  {
-    id: 'course-ic252',
-    slug: 'ic252',
-    name: 'IC252 - Probability & Statistics',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Probability distributions, random variables, hypothesis testing, Bayes theorem & estimation theory.',
-    courseCode: 'IC252',
-    tags: ['Core', 'Math', 'Probability', 'Statistics'],
-  },
-  {
-    id: 'course-ic160',
-    slug: 'ic160',
-    name: 'IC160 - Applied Mechanics',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Rigid body statics, friction, kinematics, moment of inertia, dynamics of particles & structural systems.',
-    courseCode: 'IC160',
-    tags: ['Core', 'Mechanics', 'Physics', 'Statics'],
-  },
-  {
-    id: 'course-ic221',
-    slug: 'ic221',
-    name: 'IC221 - Physics of Materials',
-    category: 'courses',
-    subcategory: 'Institute Core / Foundation',
-    campus: 'Both',
-    description: 'Solid state physics, crystal structures, band theory, semiconductors, optical and magnetic materials.',
-    courseCode: 'IC221',
-    tags: ['Core', 'Physics', 'Materials', 'Semiconductors'],
-  },
-
-  // Department Core & Electives
-  {
-    id: 'course-cs302',
-    slug: 'cs302',
-    name: 'CS302 - Database Systems',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Relational algebra, SQL, normalization, transaction processing, concurrency control, B+ trees & indexing.',
-    courseCode: 'CS302',
-    tags: ['CSE', 'DBMS', 'SQL', 'Databases', 'Transactions'],
-  },
-  {
-    id: 'course-ee201',
-    slug: 'ee201',
-    name: 'EE201 - Signals & Systems',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Continuous & discrete-time signals, LTI systems, Fourier analysis, Laplace and Z-transforms.',
-    courseCode: 'EE201',
-    tags: ['EE', 'Signals', 'Fourier', 'Transforms'],
-  },
-  {
-    id: 'course-me301',
-    slug: 'me301',
-    name: 'ME301 - Fluid Mechanics',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Fluid statics, conservation of mass and momentum, Navier-Stokes equations, boundary layers & pipe flow.',
-    courseCode: 'ME301',
-    tags: ['ME', 'Fluids', 'Thermodynamics', 'Flow'],
-  },
-  {
-    id: 'course-ce301',
-    slug: 'ce301',
-    name: 'CE301 - Structural Analysis',
-    category: 'courses',
-    subcategory: 'Department Core & Electives',
-    campus: 'North',
-    description: 'Analysis of statically indeterminate structures, slope deflection, moment distribution & finite elements.',
-    courseCode: 'CE301',
-    tags: ['CE', 'Structures', 'Analysis', 'Trusses'],
-  },
-
-  // Practicum Courses
-  {
-    id: 'course-dp201',
-    slug: 'dp201-dp301',
-    name: 'DP201/DP301 - ISTP & Design Practicum',
-    category: 'courses',
-    subcategory: 'Practicum Courses',
-    campus: 'Both',
-    description: 'Interactive Socio-Technical Practicum (ISTP) and Design Practicum — interdisciplinary solutions for Himachal community and technology.',
-    courseCode: 'DP201/301',
-    tags: ['Practicum', 'ISTP', 'Design', 'Innovation', 'Himachal'],
   },
 
   // 3. HOSTELS
@@ -1322,82 +1192,6 @@ export const SEED_TICKETS: CampusTicket[] = [
   },
 ];
 
-// Seed Moodle Academic Synchronizations
-export const SEED_MOODLE_DATA: Record<string, MoodleAssignment[]> = {
-  'IC152': [
-    {
-      id: 'moodle-ic152-1',
-      courseCode: 'IC152',
-      title: 'Lab 4: Data Analysis with Pandas & Matplotlib',
-      description: 'Implement dataframe aggregations, handling missing data, and generate time-series distribution plots for Himalayan meteorological dataset.',
-      type: 'assignment',
-      dueDate: 'Sunday, 11:59 PM',
-      weightage: '5% of Course Total',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/assign/view.php?id=49201',
-      status: 'pending',
-    },
-    {
-      id: 'moodle-ic152-2',
-      courseCode: 'IC152',
-      title: 'Quiz 2: Time Complexity & Recursion Trees',
-      description: '30-minute online Moodle quiz covering master theorem, binary recursion, and amortized array resizing.',
-      type: 'quiz',
-      dueDate: 'Thursday, 06:00 PM',
-      weightage: '10% of Course Total',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/quiz/view.php?id=49205',
-      status: 'pending',
-    },
-  ],
-  'CS302': [
-    {
-      id: 'moodle-cs302-1',
-      courseCode: 'CS302',
-      title: 'Assignment 2: B+ Tree Index Engine in C++',
-      description: 'Implement node splitting, redistribution, and point/range queries for a disk-backed B+ tree index structure.',
-      type: 'assignment',
-      dueDate: 'Next Friday, 11:59 PM',
-      weightage: '12% of Course Total',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/assign/view.php?id=51290',
-      status: 'pending',
-    },
-    {
-      id: 'moodle-cs302-2',
-      courseCode: 'CS302',
-      title: 'Mid-Sem Examination Seating Plan & Syllabus',
-      description: 'Chapters 1-7 (Relational Algebra, SQL, Normalization to BCNF, Storage Hierarchy). Venue: A1-N1 & A1-N2.',
-      type: 'announcement',
-      dueDate: 'Exam on Oct 20',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/forum/view.php?id=51299',
-      status: 'graded',
-    },
-  ],
-  'EE201': [
-    {
-      id: 'moodle-ee201-1',
-      courseCode: 'EE201',
-      title: 'Problem Set 3: Continuous-Time Fourier Transforms',
-      description: 'Solve problems on duality property, convolution in frequency domain, and ideal lowpass filter impulse responses.',
-      type: 'assignment',
-      dueDate: 'Friday, 05:00 PM',
-      weightage: '4% of Course Total',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/assign/view.php?id=38190',
-      status: 'pending',
-    },
-  ],
-  'IC110': [
-    {
-      id: 'moodle-ic110-1',
-      courseCode: 'IC110',
-      title: 'Lab 3: Thevenin and Norton Equivalent Circuits',
-      description: 'Experimental verification of equivalent resistance and open-circuit voltage on hardware breadboards in South Campus lab.',
-      type: 'lab',
-      dueDate: 'Wednesday, 02:00 PM',
-      moodleUrl: 'https://moodle.iitmandi.ac.in/mod/assign/view.php?id=28401',
-      status: 'pending',
-    },
-  ],
-};
-
 // Daily Mess Menus
 export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
   'pine-mess': {
@@ -1405,7 +1199,6 @@ export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
     day: 'Today (Friday)',
     breakfast: 'Aloo Paratha with Butter, Curd, Poha, Boiled Eggs / Omelette, Tea & Coffee',
     lunch: 'Rajma Madra, Steamed Basmati Rice, Jeera Aloo, Mix Dal, Fresh Salad, Boondi Raita, Gulab Jamun',
-    snacks: 'Samosa with Mint & Imli Chutney, Masala Chai, Biscuits',
     dinner: 'Paneer Butter Masala / Chicken Curry, Butter Naan & Tandoori Roti, Dal Makhani, Pulao, Kheer',
     specialNotice: 'Special Himachali Dham dinner scheduled for this Sunday night.',
   },
@@ -1414,7 +1207,6 @@ export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
     day: 'Today (Friday)',
     breakfast: 'Idli, Medu Vada, Sambar, Coconut Chutney, Bread Jam, Banana, Coffee / Tea',
     lunch: 'Dal Tadka, Dum Aloo Kashmiri, Rice, Phulka, Cucumber Raita, Fresh Cut Papaya',
-    snacks: 'Bread Pakora, Hot Tea & Coffee',
     dinner: 'Shahi Paneer / Egg Curry, Chapati, Dal Fry, Jeera Rice, Sewaiyan',
     specialNotice: 'Rebate applications for Diwali vacation open from Monday on the intranet portal.',
   },
@@ -1423,7 +1215,6 @@ export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
     day: 'Today (Friday)',
     breakfast: 'Puri Bhaji, Sprouted Moong, Boiled Eggs, Tea / Coffee',
     lunch: 'Kadhi Pakora, Steamed Rice, Bhindi Masala, Roti, Salad',
-    snacks: 'Veg Cutlets with Sauce, Tea',
     dinner: 'Mix Veg, Dal Palak, Phulka, Rice, Moong Dal Halwa',
   },
   'cedar-mess': {
@@ -1431,7 +1222,6 @@ export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
     day: 'Today (Friday)',
     breakfast: 'Gobhi Paratha, Curd, Omelette, Cornflakes with Milk, Tea',
     lunch: 'Chole Bhature, Boondi Raita, Onion Salad, Rice',
-    snacks: 'Bhel Puri, Green Tea & Masala Chai',
     dinner: 'Matar Paneer / Chicken Biryani, Raita, Roti, Ice Cream',
   },
   'maple-mess': {
@@ -1439,7 +1229,6 @@ export const SEED_MESS_MENUS: Record<string, MessDayMenu> = {
     day: 'Today (Friday)',
     breakfast: 'Masala Dosa with Sambar, Coconut & Tomato Chutney, Boiled Eggs, Tea & Filter Coffee',
     lunch: 'Chana Masala, Aloo Gobi, Dal Fry, Steamed Rice, Roti, Curd, Sweet Boondi',
-    snacks: 'Pav Bhaji with Butter, Hot Chai',
     dinner: 'Kadai Paneer / Mutton Curry, Dal Tadka, Tandoori Roti, Peas Pulao, Rasgulla',
     specialNotice: 'Breakfast extended by 30 minutes on Saturday & Sunday (8:00 AM - 10:00 AM).',
   },
@@ -1479,11 +1268,6 @@ export const ROOM_ADMINS: Record<string, string[]> = {
   'rann-neeti': ['b22070', 'admin', 'sports_secy'],
   'e-cell': ['b22085', 'admin'],
   'nss-ruvaab': ['b22090', 'admin'],
-  // Courses
-  'ic152': ['faculty_ic152', 'ta_ic152', 'b23419', 'admin'],
-  'cs302': ['faculty_cs302', 'ta_cs302', 'admin'],
-  'ee201': ['faculty_ee201', 'ta_ee201', 'admin'],
-  'ic110': ['faculty_ic110', 'ta_ic110', 'admin'],
   // Hostels (Wardens & Caretakers)
   'b18-chat': ['warden_surajtaal', 'caretaker_b18', 'admin'],
   'suraj-taal-general': ['warden_surajtaal', 'admin'],
@@ -1568,25 +1352,6 @@ export function canResolveTickets(
   if (clusterOrMess) {
     const room = CAMPUS_ROOMS.find(room => (room.category === 'messes' ? 'mess' : 'hostel') === scope && (room.name.toLowerCase() === clusterOrMess.toLowerCase() || room.slug === clusterOrMess.toLowerCase() || room.hostelCluster?.toLowerCase() === clusterOrMess.toLowerCase()));
     const slug = room?.slug || clusterOrMess.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const admins = ROOM_ADMINS[slug];
-    if (admins && admins.includes(roll)) return true;
-  }
-  return false;
-}
-
-export function canBroadcastMoodle(
-  user?: CampusActor | null,
-  courseCode?: string,
-  isConvOwner?: boolean
-): boolean {
-  if (!user) return false;
-  if (isConvOwner && extractRollFromUser(user)) return true;
-
-  const roll = extractRollFromUser(user);
-  if (GYMKHANA_ADMIN_ROLLS.has(roll)) return true;
-
-  if (courseCode) {
-    const slug = courseCode.toLowerCase();
     const admins = ROOM_ADMINS[slug];
     if (admins && admins.includes(roll)) return true;
   }

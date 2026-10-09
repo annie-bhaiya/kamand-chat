@@ -1,0 +1,50 @@
+name: pulse-chat
+services:
+  api:
+    image: pulse-chat-api:local
+    build:
+      context: ./server
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: ./server/.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4000
+      CLIENT_ORIGINS: ${CLIENT_ORIGINS:-http://localhost:3000}
+      TRUST_PROXY: 0
+    ports:
+      - "127.0.0.1:4000:4000"
+    mem_limit: 512m
+    cpus: 1
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  web:
+    image: pulse-chat-web:local
+    build:
+      context: ./client
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 15s
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    mem_limit: 512m
+    cpus: 1
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

@@ -5,6 +5,8 @@ const pageLimit = { type: 'integer', minimum: 1, maximum: 100, default: 50 };
 function object(properties: Record<string, unknown>, required: string[] = []) { return { type: 'object', additionalProperties: false, properties, required }; }
 type Route = { method: string; path: string; summary: string; body?: unknown; query?: Record<string, unknown>; status?: number; public?: boolean; multipart?: boolean };
 const routes: Route[] = [
+  { method:'get',path:'/api/campus/messes/{messSlug}/menu',summary:'One recurring day menu; defaults to today in Asia/Kolkata',public:true,query:{weekday:{type:'integer',minimum:1,maximum:7,description:'ISO weekday: Monday=1, Sunday=7. Omit for today.'}} },
+  { method:'put',path:'/api/campus/messes/{messSlug}/menu',summary:'Assigned mess manager updates only the specified weekday',body:object({weekday:{type:'integer',minimum:1,maximum:7},breakfast:{...text,minLength:1,maxLength:2000},lunch:{...text,minLength:1,maxLength:2000},dinner:{...text,minLength:1,maxLength:2000},specialNotice:{...text,maxLength:2000}},['weekday','breakfast','lunch','dinner']) },
   { method:'get',path:'/api/campus/events',summary:'Persistent campus calendar, ordered by date and time',public:true,query:{venue:text,category:text} },
   { method:'post',path:'/api/campus/events',summary:'Create an event for an assigned organizer; overlapping bookings return conflict',status:201,body:object({title:{...text,minLength:3,maxLength:120},description:text,category:{enum:['Club Workshop','Fest Event','Sports Tournament','Placement & Tech Talk','General']},organizer:text,venue:{enum:['Auditorium A1/A2','A13 Hall','South Campus Grounds','SCEE Seminar Hall','Sports Complex','Other']},date:{...text,format:'date'},startTime:{...text,pattern:'^[0-2][0-9]:[0-5][0-9]$'},endTime:text},['title','category','organizer','venue','date','startTime','endTime']) },
   { method:'patch',path:'/api/campus/events/{id}',summary:'Edit or reschedule an assigned organizer’s event; send the complete event fields' },
@@ -50,10 +52,10 @@ const paths: Record<string, Record<string, unknown>> = {};
 const calendarCreate = routes.find(route => route.method === 'post' && route.path === '/api/campus/events')!;
 routes.find(route => route.method === 'patch' && route.path === '/api/campus/events/{id}')!.body = calendarCreate.body;
 for (const route of routes) {
-  const parameters = [...Array.from(route.path.matchAll(/\{([^}]+)\}/g), m => ({name:m[1],in:'path',required:true,schema:uuid})), ...Object.entries(route.query ?? {}).map(([name,schema]) => ({name,in:'query',required:name==='q' && route.path.endsWith('/search'),schema}))];
+  const parameters = [...Array.from(route.path.matchAll(/\{([^}]+)\}/g), m => ({name:m[1],in:'path',required:true,schema:m[1]==='messSlug'?text:uuid})), ...Object.entries(route.query ?? {}).map(([name,schema]) => ({name,in:'query',required:name==='q' && route.path.endsWith('/search'),schema}))];
   const status=String(route.status ?? 200);
   const responses: Record<string,unknown> = { [status]: { description:status==='204'?'No content':'Success', ...(status==='204'?{}:{content:{'application/json':{schema:{$ref:'#/components/schemas/Success'}}}}) } };
-  for(const error of ['400','401','403','404','409','413','415','429','503']) responses[error]={description:'Request rejected or service unavailable',content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}};
+  for(const error of ['400','401','403','404','409','413','415','429','502','503']) responses[error]={description:'Request rejected or service unavailable',content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}};
   (paths[route.path] ??= {})[route.method] = {
     summary:route.summary,operationId:`${route.method}_${route.path.replace(/[^a-zA-Z0-9]+/g,'_')}`,security:route.public?[]:[{bearerAuth:[]}],parameters,
     ...(route.body?{requestBody:{required:true,content:{[route.multipart?'multipart/form-data':'application/json']:{schema:route.body}}}}:{}),responses,

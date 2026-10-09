@@ -58,7 +58,7 @@ describe('Residence & Branch Helper Functions', () => {
   it('correctly matches assigned branch room and restricts other branches', () => {
     const cseRoom = { category: 'branches', id: 'branch-cse', slug: 'btech-cse', name: 'B.Tech - Computer Science & Engineering' };
     const dsaiRoom = { category: 'branches', id: 'branch-dsai', slug: 'btech-dsai', name: 'B.Tech - Data Science & Artificial Intelligence' };
-    const courseRoom = { category: 'courses', id: 'course-cs201', slug: 'cs201', name: 'Data Structures' };
+    const clubRoom = { category: 'clubs', id: 'club-robotronics', slug: 'robotronics', name: 'Robotronics' };
 
     // Assigned to CSE
     expect(isUserBranchRoom(cseRoom, 'btech-cse')).toBe(true);
@@ -68,7 +68,7 @@ describe('Residence & Branch Helper Functions', () => {
     expect(isUserBranchRoom(cseRoom, 'B.Tech - Computer Science & Engineering')).toBe(true);
 
     // Non-branch categories are open
-    expect(isUserBranchRoom(courseRoom, 'btech-cse')).toBe(true);
+    expect(isUserBranchRoom(clubRoom, 'btech-cse')).toBe(true);
 
     // When user has no branch assigned
     expect(isUserBranchRoom(cseRoom, null)).toBe(false);
@@ -77,14 +77,14 @@ describe('Residence & Branch Helper Functions', () => {
   it('correctly matches assigned mess rooms and restricts other dining halls', () => {
     const pineMessRoom = { category: 'messes', name: 'Pine Mess (North Dining 1)', slug: 'pine-mess' };
     const oakMessRoom = { category: 'messes', name: 'Oak Mess (North Dining 2)', slug: 'oak-mess' };
-    const courseRoom = { category: 'courses', name: 'IC152', slug: 'courses-ic152' };
+    const clubRoom = { category: 'clubs', name: 'Robotronics', slug: 'robotronics' };
 
     // Assigned to Pine Mess
     expect(isUserMessRoom(pineMessRoom, 'Pine Mess (North Dining 1)')).toBe(true);
     expect(isUserMessRoom(oakMessRoom, 'Pine Mess (North Dining 1)')).toBe(false);
 
     // Non-mess categories are open
-    expect(isUserMessRoom(courseRoom, 'Pine Mess (North Dining 1)')).toBe(true);
+    expect(isUserMessRoom(clubRoom, 'Pine Mess (North Dining 1)')).toBe(true);
 
     // When user has no mess assigned
     expect(isUserMessRoom(pineMessRoom, null)).toBe(false);

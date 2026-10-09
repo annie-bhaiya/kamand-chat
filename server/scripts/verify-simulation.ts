@@ -54,7 +54,7 @@ try {
   }
   const messManager = sessions.get('demo_manager_pine_mess')!;
   const menu = (await request(app).get('/api/campus/messes/pine-mess/menu')).body.data;
-  const { messName: _messName, ...input } = menu;
+  const input = { weekday: menu.weekday, breakfast: menu.breakfast, lunch: menu.lunch, dinner: menu.dinner, specialNotice: menu.specialNotice };
   const saved = await request(app).put('/api/campus/messes/pine-mess/menu').set('Authorization', `Bearer ${messManager.token}`).send(input);
   assert.equal(saved.status, 200, JSON.stringify(saved.body));
   assert.deepEqual((await request(app).get('/api/campus/messes/pine-mess/menu')).body.data, menu);

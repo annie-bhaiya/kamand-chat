@@ -8,7 +8,6 @@ CampusTicket,
 Conversation,
 Message,
 MessDayMenu,
-MoodleAssignment,
 Profile,
 } from '@/types/chat';
 
@@ -501,7 +500,6 @@ export class ApiClient {
       isAdmin: boolean;
       canBookEvents: boolean;
       canResolveTickets: boolean;
-      canBroadcastMoodle: boolean;
       canUpdateMenu: boolean;
     }>(`/api/campus/rooms/${slug}/permissions`);
   }
@@ -587,31 +585,10 @@ export class ApiClient {
     });
   }
 
-  // --- Moodle Integration API ---
-  async getMoodleData(courseCode: string) {
-    return this.request<{
-      courseCode: string;
-      moodleHost: string;
-      lastSynced: string | null;
-      assignments: MoodleAssignment[];
-    }>(`/api/campus/moodle/${courseCode}`);
-  }
-
-  async syncMoodle(courseCode: string) {
-    return this.request<{
-      success: boolean;
-      courseCode: string;
-      alert: MoodleAssignment;
-      syncedAt: string;
-    }>('/api/campus/moodle/sync', {
-      method: 'POST',
-      body: JSON.stringify({ courseCode }),
-    });
-  }
 
   // --- Mess Menus API ---
-  async getMessMenu(messSlug: string) {
-    return this.request<MessDayMenu>(`/api/campus/messes/${messSlug}/menu`);
+  async getMessMenu(messSlug: string, weekday?: number) {
+    return this.request<MessDayMenu>(`/api/campus/messes/${messSlug}/menu${weekday === undefined ? '' : `?weekday=${weekday}`}`);
   }
 }
 

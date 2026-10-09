@@ -30,4 +30,28 @@ describe('message composer', () => {
     await screen.findByText('Connection lost');
     expect((input as HTMLTextAreaElement).value).toBe('My draft');
   });
+  it('dismisses emoji choices with Escape, restores focus, and dismisses outside clicks', () => {
+    render(<ToastProvider><MessageComposer conversationId="room" onSendMessage={vi.fn()} onSendTyping={vi.fn()} /></ToastProvider>);
+    const trigger = screen.getByRole('button', { name: 'Add emoji' });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('group', { name: 'Choose an emoji' })).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('group', { name: 'Choose an emoji' })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    fireEvent.click(trigger);
+    fireEvent.pointerDown(screen.getByRole('textbox', { name: 'Message' }));
+    expect(screen.queryByRole('group', { name: 'Choose an emoji' })).toBeNull();
+  });
+  it('exposes sending feedback and prevents emoji input while a message is pending', async () => {
+    let complete!: () => void;
+    const send = vi.fn(() => new Promise<void>(resolve => { complete = resolve; }));
+    render(<ToastProvider><MessageComposer conversationId="room" onSendMessage={send} onSendTyping={vi.fn()} /></ToastProvider>);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), { target: { value: 'Hello' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    expect(screen.getByRole('button', { name: 'Sending message' }).getAttribute('aria-busy')).toBe('true');
+    expect((screen.getByRole('button', { name: 'Add emoji' }) as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => complete());
+    expect(screen.getByRole('button', { name: 'Send message' }).getAttribute('aria-busy')).toBe('false');
+  });
+
 });

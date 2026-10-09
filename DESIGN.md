@@ -22,27 +22,27 @@ colors:
   bubble-received: "#eceee7"
   success: "#287044"
   success-light: "#e2eee2"
-  warning: "#94601f"
+  warning: "#85531b"
   warning-light: "#f6ead6"
   danger: "#b13d43"
   danger-light: "#f9e5e4"
-  dark-bg-primary: "#141e1a"
-  dark-bg-secondary: "#1b2922"
-  dark-bg-tertiary: "#24352c"
-  dark-bg-elevated: "#2b3c32"
-  dark-bg-glass: "#19251f"
-  dark-bg-glass-card: "#24352c"
-  dark-bg-glass-hover: "#2a3d32"
-  dark-bg-glass-active: "#314939"
-  dark-text-primary: "#edf2e8"
-  dark-text-secondary: "#bbc8bc"
-  dark-text-muted: "#a3b3a6"
-  dark-border-subtle: "#37493c"
-  dark-border-medium: "#526751"
+  dark-bg-primary: "#121212"
+  dark-bg-secondary: "#1c1c1c"
+  dark-bg-tertiary: "#262626"
+  dark-bg-elevated: "#303030"
+  dark-bg-glass: "#181818"
+  dark-bg-glass-card: "#262626"
+  dark-bg-glass-hover: "#303030"
+  dark-bg-glass-active: "#383838"
+  dark-text-primary: "#f2f2f2"
+  dark-text-secondary: "#c5c5c5"
+  dark-text-muted: "#a8a8a8"
+  dark-border-subtle: "#383838"
+  dark-border-medium: "#555555"
   dark-accent: "#a9d3ad"
   dark-accent-hover: "#c1e6c4"
-  dark-on-accent: "#142a1e"
-  dark-bubble-received: "#27392e"
+  dark-on-accent: "#172019"
+  dark-bubble-received: "#2a2a2a"
   dark-success: "#a2d7af"
   dark-success-light: "#243b2d"
   dark-warning: "#e3bf85"
@@ -178,7 +178,7 @@ components:
 
 **Creative North Star: "Campus Paper"**
 
-Campus Paper describes the implemented world: warm paper surfaces, pine ink and a locally bundled humanist sans serif. The palette gives conversations a calm reading ground, with accent colour reserved for sending, selection and focused interaction.
+Campus Paper describes the implemented world: warm paper surfaces, pine ink and a locally bundled humanist sans serif. The palette gives conversations a calm reading ground. Pine anchors messaging; blue coursework, violet calendar, amber maintenance and terracotta dining provide consistent wayfinding and action cues.
 
 The same surface and control vocabulary carries through authentication, chat and campus tools. Density and type size are adjustable; light, dark and system appearance share semantic tokens. This record describes the final code, not a pixel specification inferred from the historical mockup.
 
@@ -201,7 +201,7 @@ Primary Pine anchors actions and selected state. Warm paper neutrals separate re
 
 ### Secondary
 
-- **Clay** and **Lake**: optional accent replacements selected in Visual settings; each has light and dark hover values. They replace the action colour rather than adding competing simultaneous accents.
+- **Clay** and **Lake**: optional accent replacements selected in Visual settings; each has light and dark hover values. They personalize the messaging accent. Stable learning, calendar, maintenance and dining colours remain available alongside it.
 - **Success, Warning and Danger**: semantic feedback and their paired quiet surfaces.
 
 ### Neutral
@@ -250,7 +250,7 @@ Opaque tonal layering and quiet boundaries define everyday depth. Buttons, messa
 
 **The Quiet Surface Rule.** Keep daily conversation surfaces flat; reserve structural shadows for dialogs and toasts.
 
-Motion uses short ease-out settling rather than large travel: fast and normal transitions, fade entrances, scale entrances and an (8px) settle-in. The auth form settles over (360ms). Both device reduced-motion preference and the explicit setting force animation/transition duration to (.01ms), one iteration, and automatic scrolling.
+Motion uses short ease-out settling rather than large travel: fast and normal transitions, fade entrances, scale entrances and an (8px) settle-in. The auth form settles over (360ms). Both device reduced-motion preference and the explicit setting remove animations and spatial press effects, while retaining 120ms colour, border and opacity feedback and automatic scrolling.
 
 ## Shapes
 
@@ -260,7 +260,7 @@ The shared radius family runs from small corners through softly rounded containe
 
 ### Buttons
 
-Primary actions pair accent with on-accent, use the shared medium radius and (10px 18px) padding, with semibold (0.9rem) text. Hover moves to accent-hover; active scales to (.97). Disabled actions lower opacity to (.48) and suppress transforms. Secondary actions use a soft card surface and subtle edge, moving to the hover surface and medium edge. Ghost actions keep their background transparent until hover. The auth submit is full width and at least (50px) high.
+Primary actions pair accent with on-accent, use the shared medium radius and (10px 18px) padding, with semibold (0.9rem) text. Hover moves to accent-hover; active scales to (.97). Disabled actions lower opacity to (.48) and suppress transforms. Secondary actions use a clean surface and visible medium edge. Tonal actions pair a role colour with its light or dark tinted surface; filled campus actions use the same role and an explicit contrasting foreground. Ghost actions keep their background transparent until hover. The auth submit is full width and at least (50px) high.
 
 ### Inputs / Fields
 
@@ -268,7 +268,7 @@ Fields use the clean surface, an (8px) radius, subtle edge and (11px 14px) paddi
 
 ### Navigation
 
-Sidebar tabs use compact sentence-case labels, small corners, at least (34px) height and a soft tinted selected state. Conversation rows combine an avatar, truncated name/preview and compact timestamp; the selected row uses the accent tint. Hover changes the surface without raising it.
+Sidebar tabs use compact sentence-case labels, small corners, at least (44px) height and a soft tinted selected state. Conversation rows combine an avatar, truncated name/preview and compact timestamp; the selected row uses the accent tint. Hover changes the surface without raising it.
 
 ### Chips / Status
 
@@ -302,3 +302,28 @@ Appearance, accent, type size and density use selectable tile groups, with a (52
 - **Don't** rely on hover to expose message actions on touch screens.
 - **Don't** treat sample campus records as live institutional data.
 
+
+## Action palette refinement — October 9, 2026
+
+Pine remains the main messaging colour. Stable action roles now distinguish learning (blue), calendar and clubs (violet), maintenance (amber), and dining (terracotta), including dark-mode ramps. Text labels and Lucide icons accompany colour. Personal Clay/Lake choices affect messaging without changing these roles.
+
+Shared buttons and icon controls use 44px minimum targets; utility launchers use 60px height. Tonal buttons, filled buttons, neutral secondary buttons and destructive buttons have distinct treatments, keyboard focus, hover, pressed and disabled states. Campus statuses distinguish pending, successful and cancelled/conflicting outcomes with both text and colour.
+
+Motion explains emoji opening, drawer arrival, form disclosure and press feedback. Sending/uploading indicators expose busy state. Emoji choices dismiss on outside pointer interaction or Escape; Escape restores trigger focus. Reduced motion keeps colour feedback while removing spatial movement.
+
+## Dark surfaces and cohort actions — October 9, 2026
+
+Dark appearance uses neutral charcoal surfaces (#121212 canvas through #303030 elevation), neutral gray edges and white/gray reading text. Pine remains the primary action accent, with the existing semantic action colours preserved. Incoming messages use charcoal rather than green.
+
+Hostel, branch and mess identification rows use semantic badges with truncating text beside a neutral outlined Change action. The action has a Pencil icon, a contextual accessible label and a 44px minimum target, and continues to open Settings.
+
+
+## Campus feature scope — October 9, 2026
+
+Campus navigation includes clubs, hostels, branches and messes. Moodle, RSS connections and the Courses tab have been removed. Branch cohort channels retain their chat and calendar actions.
+
+## Sidebar and campus modal spacing — October 9, 2026
+
+The sidebar uses a stable three-column utility row and navigation grid. Dividers separate utilities, view filters and conversations; shared 12–16px insets align search and list content. Maintenance filters use a single desktop row and stack with equal scope buttons on mobile. Reports and the disclosure form have clear section boundaries.
+
+Dining uses the shared 760px modal, with a fixed header/footer and one scrolling body. Meal labels and timings occupy a 200px column beside meal text on desktop, separated by horizontal rules; mobile stacks each meal with 12px inner gaps. Dining controls, meal content, notices, support and rebate drafts follow a 20px section rhythm. Rebate dates stack on small screens, and the action explicitly saves a local draft.

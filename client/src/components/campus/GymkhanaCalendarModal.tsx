@@ -170,7 +170,7 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
       <div className="campus-toolbar">
         <label>Venue<select className="input-control" value={selectedVenue} onChange={e => setSelectedVenue(e.target.value)}>{VENUES.map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Event type<select className="input-control" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>{CATEGORIES.map(value => <option key={value}>{value}</option>)}</select></label>
-        {(canBook || user?.app_metadata?.campus_rooms?.length) && <button className="btn btn-primary" onClick={() => { setEditingId(null); setShowBookingForm(value => !value); }}><Plus size={16}/>{showBookingForm ? 'Close form' : 'Plan an event'}</button>}
+        {(canBook || user?.app_metadata?.campus_rooms?.length) && <button className="btn btn-filled" data-tone="calendar" onClick={() => { setEditingId(null); setShowBookingForm(value => !value); }}><Plus size={16}/>{showBookingForm ? 'Close form' : 'Plan an event'}</button>}
       </div>
       {showBookingForm && <form className="campus-form" onSubmit={handleBookEvent}>
         <h4>{editingId ? 'Edit or reschedule event' : 'Plan an event'}</h4>
@@ -185,14 +185,14 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
           <label>Ends at<input className="input-control" type="time" required value={endTime} onChange={e => setEndTime(e.target.value)}/></label>
         </div>
         {!canBook && <p>Choose an organizer whose events you manage.</p>}
-        <button className="btn btn-primary" disabled={submitting || !canBook} type="submit">{submitting ? 'Saving…' : 'Save event'}</button>
+        <button className="btn btn-filled" data-tone="calendar" disabled={submitting || !canBook} type="submit">{submitting ? 'Saving…' : 'Save event'}</button>
       </form>}
       {loading ? <p className="campus-state" role="status">Loading events…</p> : !events.length ? <p className="campus-state">No events match these filters.</p> : <div className="campus-records">{events.map(event => <article className="campus-record" key={event.id}>
-        <div className="campus-record-meta"><span>{event.category}</span><span className="campus-status">{event.status === 'approved' ? 'Scheduled' : event.status}</span></div>
+        <div className="campus-record-meta"><span>{event.category}</span><span className="campus-status" data-status={event.status}>{event.status === 'approved' ? 'Scheduled' : event.status}</span></div>
         <h4>{event.title}</h4><p>{event.description}</p>
         <div className="campus-record-meta"><CalendarIcon size={15}/><time dateTime={event.date}>{new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' })}</time><Clock size={15}/>{event.startTime} – {event.endTime}</div>
         <div className="campus-record-meta"><MapPin size={15}/>{event.venue} · {event.organizer}</div>
-        {event.canManage && <div className="campus-toolbar"><button type="button" className="btn btn-secondary" disabled={submitting} onClick={() => editEvent(event)}>Edit or reschedule</button><label>Status<select className="input-control" value={event.status} disabled={changingId !== null} onChange={e => changeStatus(event, e.target.value)}>{['pending', 'approved', 'conflict', 'completed', 'cancelled'].map(status => <option key={status} value={status}>{status === 'approved' ? 'Scheduled' : status.charAt(0).toUpperCase() + status.slice(1)}</option>)}</select></label></div>}
+        {event.canManage && <div className="campus-toolbar"><button type="button" className="btn btn-tonal" data-tone="calendar" disabled={submitting} onClick={() => editEvent(event)}>Edit or reschedule</button><label>Status<select className="input-control" value={event.status} disabled={changingId !== null} onChange={e => changeStatus(event, e.target.value)}>{['pending', 'approved', 'conflict', 'completed', 'cancelled'].map(status => <option key={status} value={status}>{status === 'approved' ? 'Scheduled' : status.charAt(0).toUpperCase() + status.slice(1)}</option>)}</select></label></div>}
       </article>)}</div>}
     </div>
   </Modal>;
