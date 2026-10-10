@@ -1,4 +1,4 @@
-# KamandChat
+# Kamand Chat
 <!-- impeccable:product-schema 1 -->
 
 ## Platform
@@ -14,4 +14,4 @@ Direct and group conversations alongside course, club, hostel, branch, mess, cal
 Existing Next.js and React client with an Express realtime server. Preserve current workflows and existing workspace changes. Visual settings must personalize the application; animations must respect reduced motion. No fabricated live messages or campus records.
 
 ## Brand Commitments
-Preserve KamandChat and IIT Mandi terminology. The user requested a full redesign with a relevant theme, readable type and smooth UX, and chose mockups before implementation.
+Preserve Kamand Chat and IIT Mandi terminology. The user requested a full redesign with a relevant theme, readable type and smooth UX, and chose mockups before implementation.

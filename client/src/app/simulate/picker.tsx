@@ -34,7 +34,7 @@ export default function SimulationPicker() {
   }
   const filtered = accounts.filter(account => `${account.name} ${account.username} ${account.role} ${account.rooms.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
   return <main className="simulation-page">
-    <Link href="/" className="btn btn-ghost">Back to KamandChat</Link>
+    <Link href="/" className="btn btn-ghost">Back to Kamand Chat</Link>
     <h1>Test a campus role</h1>
     <p className="simulation-intro">Development only. Choose a demo account to test its rooms, student membership and campus tools.</p>
     <label htmlFor="account-search">Find an account or room</label>

@@ -1,6 +1,6 @@
-# Pulse Chat deployment
+# Kamand Chat deployment
 
-Live website: [Pulse Chat on Azure](https://pulse-chat-web.salmonriver-faba0caf.centralindia.azurecontainerapps.io). See [deployment details](deploy/DEPLOYMENT.md) for the current resources and verification.
+Public website: [Kamand Chat](https://kamandchat.highliftpages.com). See [deployment details](deploy/DEPLOYMENT.md) for the current resources and verification, and [custom domain setup](deploy/CUSTOM-DOMAIN.md) for DNS records.
 
 The full application runs as two Linux containers: Next.js on port 3000 and Express/Socket.IO on port 4000. Existing hosted Supabase provides PostgreSQL, Auth and private object storage. Database migrations stay in `server/supabase/migrations` and are applied separately using the server's documented migration workflow.
 
@@ -27,7 +27,7 @@ Requirements: PowerShell 7, Docker Desktop, Azure CLI, Bicep (`az bicep install`
 ./deploy/azure.ps1 -Subscription '<subscription ID>' -Location centralindia
 ```
 
-The script deploys repeatable Bicep infrastructure in `rg-pulse-chat`, builds Linux/amd64 images with the Azure API URL, pushes uniquely tagged images to a private Basic Azure Container Registry, deploys both Container Apps and verifies HTTPS health, readiness and the frontend. It reads only the Supabase URL and publishable key from `server/.env`; it never deploys SQL passwords or admin keys. Runtime keys use Container Apps secrets. Registry admin access is disabled; an assigned managed identity receives `AcrPull`.
+The script deploys repeatable Bicep infrastructure in `rg-pulse-chat` with the `kamand-chat` resource prefix and a standard Workload Profiles environment, builds Linux/amd64 images with the Azure API URL, pushes uniquely tagged images to a private Basic Azure Container Registry, deploys both Container Apps and verifies HTTPS health, readiness and the frontend. It reads only the Supabase URL and publishable key from `server/.env`; it never deploys SQL passwords or admin keys. Runtime keys use Container Apps secrets. Registry admin access is disabled; an assigned managed identity receives `AcrPull`. Backend CORS accepts `https://kamandchat.highliftpages.com` and the generated Azure frontend origin; redeployment preserves existing custom-domain bindings.
 
 The backend stays at one replica because realtime fan-out and rate limits are currently process-local. It remains running to serve long-lived WebSockets. The frontend scales from zero to two replicas (cold starts are possible). Each replica requests 0.5 vCPU / 1 GiB. Configure a shared Redis adapter and shared rate limiting before increasing backend replicas. Azure HTTPS ingress forwards WebSockets; the application already uses WebSocket-only Socket.IO transport. Production CORS accepts only the deployed frontend origin.
 

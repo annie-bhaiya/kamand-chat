@@ -260,7 +260,7 @@ export function VisualSettingsProvider({ children }: { children: React.ReactNode
           {(['comfortable', 'compact'] as const).map(value => <button key={value} className="setting-option" aria-pressed={preferences.density === value} onClick={() => choose('density', value)}>{value[0].toUpperCase() + value.slice(1)}</button>)}
         </div></fieldset>
         <label className="setting-switch"><span><strong>Reduce motion</strong><small>Your device’s reduced-motion preference is always respected.</small></span><input type="checkbox" role="switch" checked={preferences.reduceMotion} onChange={e => choose('reduceMotion', e.target.checked)} /></label>
-        <div className="settings-preview"><span>Message preview</span><p>Same campus. A little more you.</p><small>KamandChat · Just now</small></div>
+        <div className="settings-preview"><span>Message preview</span><p>Same campus. A little more you.</p><small>Kamand Chat · Just now</small></div>
         <div className="settings-bottom"><small role="status">{storageWarning ? 'Applied for this visit. Browser storage is unavailable.' : 'Saved on this device.'}</small><button className="btn btn-ghost" onClick={() => update(defaults)}><RotateCcw size={15} />Reset</button></div>
       </div>
     </Modal>

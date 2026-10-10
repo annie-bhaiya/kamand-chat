@@ -62,6 +62,6 @@ for (const route of routes) {
   };
 }
 export const openapi = {
-  openapi:'3.1.0',info:{title:'First Commit Chat API',version:'1.0.0',description:'Express REST API backed by Supabase Auth, PostgreSQL and private Storage. Socket.IO events are documented in README.md.'},servers:[{url:'/'}],paths,
+  openapi:'3.1.0',info:{title:'Kamand Chat API',version:'1.0.0',description:'Express REST API backed by Supabase Auth, PostgreSQL and private Storage. Socket.IO events are documented in README.md.'},servers:[{url:'/'}],paths,
   components:{securitySchemes:{bearerAuth:{type:'http',scheme:'bearer',bearerFormat:'JWT'}},schemas:{Success:{type:'object',properties:{data:{},next_cursor:{type:['string','integer','null']}}},Error:{type:'object',properties:{error:{type:'object',properties:{code:text,message:text,details:{type:'array',items:{type:'object'}}}},request_id:text}}}},
 };

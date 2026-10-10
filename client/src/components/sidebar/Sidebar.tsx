@@ -261,7 +261,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span className="brand-title">KamandChat</span>
+                  <span className="brand-title">Kamand Chat</span>
                   {connectionStatus === 'connected' ? (
                     <span title="Intranet Connected" style={{ display: 'flex' }}>
                       <span className="status-dot online pulsing" />

@@ -3,7 +3,7 @@
 @import "tailwindcss/utilities" layer(utilities);
 @source "../";
 
-/* KamandChat: campus paper, pine ink, humanist typography. */
+/* Kamand Chat: campus paper, pine ink, humanist typography. */
 :root {
   color-scheme: light;
   --bg-primary: #faf9f5;

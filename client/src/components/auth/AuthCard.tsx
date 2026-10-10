@@ -44,14 +44,14 @@ export function AuthCard() {
         if (result.requiresEmailConfirmation) {
           setConfirmation(true); setStage('login'); setPassword('');
           success('Check your institute inbox for the confirmation link.');
-        } else success('Welcome to KamandChat.');
+        } else success('Welcome to Kamand Chat.');
       }
     } catch (err) { error(err instanceof Error ? err.message : 'Could not connect. Please try again.'); }
     finally { setBusy(false); }
   };
   return <main className="auth-page">
     <section className="auth-story">
-      <Link href="/" className="auth-brand"><GraduationCap size={30} /><span>KamandChat<small>IIT Mandi</small></span></Link>
+      <Link href="/" className="auth-brand"><GraduationCap size={30} /><span>Kamand Chat<small>IIT Mandi</small></span></Link>
       <div className="auth-story-copy"><h1>Your campus.<br />Closer together.</h1><p>From a quick question to the next big plan. A shared space for the people who make campus yours.</p>
         <div className="auth-feature"><MessageCircle size={20} /><span>Conversations that keep you connected</span></div>
         <div className="auth-feature"><Users size={20} /><span>Your classes, clubs and campus communities</span></div>
@@ -62,7 +62,7 @@ export function AuthCard() {
       <button className="btn btn-secondary auth-settings" onClick={openSettings}><SlidersHorizontal size={16} />Visual settings</button>
       <div className="auth-form-wrap">
         {stage !== 'roll' && <button className="btn btn-ghost auth-back" disabled={busy} onClick={() => { setStage('roll'); setPassword(''); setConfirmation(false); }}><ArrowLeft size={16} />Change roll number</button>}
-        <h2>{stage === 'roll' ? 'Welcome to KamandChat' : stage === 'login' ? 'Good to see you again' : 'Make yourself at home'}</h2>
+        <h2>{stage === 'roll' ? 'Welcome to Kamand Chat' : stage === 'login' ? 'Good to see you again' : 'Make yourself at home'}</h2>
         <p className="auth-intro">{stage === 'roll' ? 'Start with your IIT Mandi roll number. We’ll find your account or help you create one.' : stage === 'login' ? `Sign in with your password for ${parsed.email}.` : `Create your account with ${parsed.email}.`}</p>
         {confirmation && <div className="auth-notice" role="status"><CheckCircle2 size={20} /><span>Confirmation email sent. Open the link in your institute inbox, then sign in.</span></div>}
         <form onSubmit={submit} className="auth-form" key={stage}>

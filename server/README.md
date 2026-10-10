@@ -1,4 +1,4 @@
-# First Commit chat backend
+# Kamand Chat backend
 
 Node.js 22+ and TypeScript, Express 5, Supabase JavaScript SDK, PostgreSQL, Supabase Auth, private Supabase Storage, and Socket.IO. The Next.js frontend lives in `../client`; REST endpoints, SQL migrations, local configuration, and automated tests live in this folder.
 
@@ -137,6 +137,10 @@ npm.cmd start
 ```
 
 Use `/ready` as the readiness probe. Production backups, restore testing, email provider settings, and monitoring are configured in your hosting/Supabase project.
+
+Confirmation emails use `AUTH_EMAIL_REDIRECT_URL` (default: `https://kamandchat.highliftpages.com`) for both explicit registration and automatic signup during login. Override it for another environment; do not derive it from request headers. In hosted Supabase **Authentication > URL Configuration**, set **Site URL** to the public HTTPS website and allow that exact redirect URL. A destination omitted from the allowlist can fall back to the project's Site URL. The local `supabase/config.toml` does not update hosted settings.
+
+Alternatively, set `SUPABASE_ACCESS_TOKEN` locally to a management token with Auth configuration read/write access, then run `./deploy/supabase-auth-url.ps1` from the repository root. The script updates only the hosted Site URL and redirect allowlist and verifies them. Use `{{ .ConfirmationURL }}` for the confirmation template's button; a custom template hardcoding localhost must be corrected separately. Deploy the backend changes after updating hosted Auth. Existing emails retain their old links; request a fresh confirmation after the update. See [Supabase redirect URL configuration](https://supabase.com/docs/guides/auth/redirect-urls).
 
 ## Campus tools and visual preferences
 

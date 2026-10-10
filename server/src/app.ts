@@ -38,7 +38,7 @@ export function createApp(config: Config, options: { factory?: ClientFactory; ev
   if (config.NODE_ENV !== 'development') {
     app.use('/api', rateLimit({ windowMs: 60000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } } }));
   }
-  app.use('/api/auth', authRoutes(factory, events));
+  app.use('/api/auth', authRoutes(factory, events, config.AUTH_EMAIL_REDIRECT_URL));
   if (config.NODE_ENV === 'development') {
     app.use('/simulate', simulationRoutes(factory));
     app.use('/api/simulate', simulationRoutes(factory));

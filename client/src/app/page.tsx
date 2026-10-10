@@ -67,7 +67,7 @@ function ChatAppContent() {
           <MessageSquare size={24} />
         </div>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.867rem' }}>
-          Connecting to KamandChat...
+          Connecting to Kamand Chat...
         </p>
       </div>
     );

@@ -6,6 +6,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(0).max(65535).default(4000),
   HOST: z.string().default('127.0.0.1'),
   CLIENT_ORIGINS: z.string().default('http://localhost:3000,http://localhost:5173'),
+  AUTH_EMAIL_REDIRECT_URL: z.url().refine(value => ['http:', 'https:'].includes(new URL(value).protocol), 'Use an HTTP or HTTPS URL.').default('https://kamandchat.highliftpages.com'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
   SUPABASE_URL: z.url(),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(10).refine(value => {

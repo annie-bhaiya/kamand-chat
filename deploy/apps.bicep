@@ -1,11 +1,14 @@
 param location string = resourceGroup().location
-param prefix string = 'pulse-chat'
+param prefix string = 'kamand-chat'
 param environmentId string
 param identityId string
 param registryHost string
 param imageTag string
 param apiUrl string
 param webUrl string
+param clientOrigins string = webUrl
+param authEmailRedirectUrl string = 'https://kamandchat.highliftpages.com'
+param webCustomDomains array = []
 param supabaseUrl string
 @secure()
 param supabaseKey string
@@ -36,7 +39,8 @@ resource api 'Microsoft.App/containerApps@2025-01-01' = {
           { name: 'HOST', value: '0.0.0.0' }
           { name: 'PORT', value: '4000' }
           { name: 'TRUST_PROXY', value: '1' }
-          { name: 'CLIENT_ORIGINS', value: webUrl }
+          { name: 'CLIENT_ORIGINS', value: clientOrigins }
+          { name: 'AUTH_EMAIL_REDIRECT_URL', value: authEmailRedirectUrl }
           { name: 'SUPABASE_URL', value: supabaseUrl }
           { name: 'SUPABASE_PUBLISHABLE_KEY', secretRef: 'supabase-key' }
         ]
@@ -63,7 +67,7 @@ resource web 'Microsoft.App/containerApps@2025-01-01' = {
     workloadProfileName: 'Consumption'
     configuration: {
       activeRevisionsMode: 'Single'
-      ingress: { external: true, targetPort: 3000, transport: 'auto', allowInsecure: false }
+      ingress: { external: true, targetPort: 3000, transport: 'auto', allowInsecure: false, customDomains: webCustomDomains }
       registries: [{ server: registryHost, identity: identityId }]
     }
     template: {

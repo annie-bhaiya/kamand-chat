@@ -1,4 +1,4 @@
-# Pulse Chat — Next.js Frontend
+# Kamand Chat — Next.js Frontend
 
 A modern, elegant, and animated frontend for the chat application, built with **Next.js 16**, **TypeScript**, and **semantic CSS and Tailwind utilities**. It interfaces with the backend server via REST APIs and real-time **Socket.IO** WebSockets.
 

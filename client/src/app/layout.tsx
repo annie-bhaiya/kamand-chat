@@ -14,7 +14,7 @@ const dmSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'KamandChat — IIT Mandi Intracampus Network',
+  title: 'Kamand Chat — IIT Mandi Intracampus Network',
   description: 'An elegant intracampus real-time chat application for IIT Mandi students across North and South Campuses.',
 };
 

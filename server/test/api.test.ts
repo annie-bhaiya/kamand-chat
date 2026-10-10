@@ -69,7 +69,7 @@ before(async () => {
       if (body.p_conversation !== conversationId) { res.statusCode=403; res.end(JSON.stringify({ code:'42501', message:'Membership required' })); return; }
       res.end(JSON.stringify({ id: randomUUID(), conversation_id: conversationId, sender_id: user, seq: 1, body: body.p_body, attachments: [] })); return;
     }
-    if (path === '/auth/v1/signup') { res.end(JSON.stringify({ id: user, email: body.email, user_metadata: body.data })); return; }
+    if (new URL(path, 'http://fixture').pathname === '/auth/v1/signup') { res.end(JSON.stringify({ id: user, email: body.email, user_metadata: body.data })); return; }
     if (path.startsWith('/auth/v1/token')) { res.end(JSON.stringify({ access_token: token, token_type:'bearer', refresh_token:'refresh-test-token', expires_in:3600, user:{ id:user, email:body.email } })); return; }
     res.statusCode=404; res.end(JSON.stringify({ message:'Fixture endpoint not implemented' }));
   });
@@ -118,7 +118,8 @@ test('verified user token is passed to Supabase RLS queries', async () => {
 test('signup forwards only validated profile metadata and handles email confirmation', async () => {
   const response = await request(app).post('/api/auth/register').send({ email:'new@example.com', password:'StrongPass123!', display_name:'New Person' }).expect(201);
   assert.equal(response.body.data.requires_email_confirmation,true);
-  const call = calls.findLast(c => c.path==='/auth/v1/signup');
+  const call = calls.findLast(c => new URL(c.path, 'http://fixture').pathname === '/auth/v1/signup');
+  assert.equal(new URL(call!.path, 'http://fixture').searchParams.get('redirect_to'), 'https://kamandchat.highliftpages.com');
   assert.equal(call?.body.data.display_name,'New Person');
   assert.equal(call?.authorization,'Bearer publishable-test-key');
 });
@@ -132,15 +133,16 @@ test('login auto-detects non-existent user and creates account with confirmation
   const response = await request(app).post('/api/auth/login').send({ email:'newstudent@example.com', password:'StrongPass123!', display_name:'New Student' }).expect(200);
   assert.equal(response.body.data.auto_created, true);
   assert.equal(response.body.data.requires_email_confirmation, true);
-  const call = calls.findLast(c => c.path === '/auth/v1/signup');
+  const call = calls.findLast(c => new URL(c.path, 'http://fixture').pathname === '/auth/v1/signup');
+  assert.equal(new URL(call!.path, 'http://fixture').searchParams.get('redirect_to'), 'https://kamandchat.highliftpages.com');
   assert.equal(call?.body.data.display_name, 'New Student');
 });
 test('a failed account lookup never creates a new account', async () => {
-  const signupsBefore = calls.filter(call => call.path === '/auth/v1/signup').length;
+  const signupsBefore = calls.filter(call => new URL(call.path, 'http://fixture').pathname === '/auth/v1/signup').length;
   accountLookupUnavailable = true;
   try {
     await request(app).post('/api/auth/login').send({ email: 'alice@example.com', password: 'StrongPass123!' }).expect(503);
-    assert.equal(calls.filter(call => call.path === '/auth/v1/signup').length, signupsBefore);
+    assert.equal(calls.filter(call => new URL(call.path, 'http://fixture').pathname === '/auth/v1/signup').length, signupsBefore);
   } finally { accountLookupUnavailable = false; }
 });
 test('validation rejects forged sender IDs, bad UUIDs, empty messages and conflicting history cursors', async () => {

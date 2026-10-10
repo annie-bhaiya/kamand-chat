@@ -1,17 +1,19 @@
 # Current Azure deployment
 
-Deployed and verified on 9 October 2026 using the signed-in **Azure for Students** subscription.
+Deployed and verified on 10 October 2026 using the signed-in **Azure for Students** subscription.
 
 | Setting | Value |
 | --- | --- |
 | Region | Central India |
 | Resource group | `rg-pulse-chat` |
-| Environment | `pulse-chat-env` |
+| Environment | `kamand-chat-env` (standard Workload Profiles) |
 | Registry | `pulseitz3kz4cs7p2k.azurecr.io` |
-| Image tag | `20261009122738` |
-| Frontend | https://pulse-chat-web.salmonriver-faba0caf.centralindia.azurecontainerapps.io |
-| API | https://pulse-chat-api.salmonriver-faba0caf.centralindia.azurecontainerapps.io |
-| Registry pull identity | `pulse-chat-pull` |
+| Frontend image tag | `20261010002530` |
+| Backend image tag | `20261010002530` |
+| Public frontend | https://kamandchat.highliftpages.com |
+| Azure frontend | https://kamand-chat-web.blackmeadow-4b6b3a7d.centralindia.azurecontainerapps.io |
+| API | https://kamand-chat-api.blackmeadow-4b6b3a7d.centralindia.azurecontainerapps.io |
+| Registry pull identity | `kamand-chat-pull` |
 
 Both active revisions reported **Healthy**. Frontend, API `/health` and API `/ready` returned HTTP 200. Production CORS returned the exact deployed frontend origin. All nine referenced JavaScript assets loaded successfully, and the frontend bundle included the correct public Azure API URL. A WebSocket-only Socket.IO connection reached the API over HTTPS and correctly rejected anonymous access. This verifies transport and auth rejection; no authenticated production chat fixtures were created.
 
@@ -21,4 +23,10 @@ Validation: backend 55 tests passed; frontend 41 tests passed; both production b
 
 The existing hosted Supabase project continues to provide database, authentication and storage. Azure resources are billable, including the standing registry and always-running backend. Backend replicas are limited to one until shared realtime delivery and rate limits are configured. Persistent cloud log retention and authenticated end-to-end production testing were not configured by this deployment.
 
-Redeploy from the repository root using `./deploy/azure.ps1`. See the root README for settings, local Docker commands and operational guidance.
+The app branding, browser title, authentication screens, sidebar, settings preview and OpenAPI title use **Kamand Chat**. The requested custom-domain CNAME and verification TXT records resolve publicly. Azure issued managed certificate `mc-kamand-chat-en-kamandchat-highl-2891`, the domain binding reports `SniEnabled`, and **https://kamandchat.highliftpages.com** returned HTTP 200 with valid HTTPS. See `CUSTOM-DOMAIN.md` for the exact records and commands.
+
+Verification on the custom domain loaded all nine JavaScript assets with the correct new API endpoint, passed API liveness/readiness and CORS checks, and reached the Socket.IO server over HTTPS WebSocket transport. The browser showed **Welcome to Kamand Chat** and **Campus gateway is online**. Both active app revisions reported Healthy. Superseded `pulse-chat-web` and `pulse-chat-api` apps were removed; the registry remains shared by the current deployment.
+
+Redeploy from the repository root using `./deploy/azure.ps1`. Existing domain bindings are preserved. The resource group and registry retain their original infrastructure names to avoid recreating the registry. See the root README for settings, local Docker commands and operational guidance.
+
+The 10 October deployment activated API revision `kamand-chat-api--0000002` and frontend revision `kamand-chat-web--0000001`. Both report successful provisioning and are the latest ready revisions. The custom domain and Azure frontend, API `/health`, and API `/ready` returned HTTP 200. The API runtime has `AUTH_EMAIL_REDIRECT_URL=https://kamandchat.highliftpages.com`, and both signup paths explicitly pass that destination to Supabase. The backend build and all 55 server tests passed. Hosted Supabase Site URL and redirect allowlist updates remain pending because no management token was available; use `supabase-auth-url.ps1` with management access. Confirmation email delivery and the final hosted redirect have not been tested end to end.

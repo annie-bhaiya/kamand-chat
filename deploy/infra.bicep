@@ -1,5 +1,5 @@
 param location string = resourceGroup().location
-param prefix string = 'pulse-chat'
+param prefix string = 'kamand-chat'
 
 resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: 'pulse${uniqueString(resourceGroup().id)}'
@@ -20,10 +20,11 @@ resource pull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalType: 'ServicePrincipal'
   }
 }
-resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
+resource environment 'Microsoft.App/managedEnvironments@2026-07-01' = {
   name: '${prefix}-env'
   location: location
   properties: {
+    environmentMode: 'WorkloadProfiles'
     workloadProfiles: [{ name: 'Consumption', workloadProfileType: 'Consumption' }]
   }
 }

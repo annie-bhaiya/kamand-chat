@@ -3,7 +3,8 @@ param(
   [string]$Subscription,
   [string]$Location = 'centralindia',
   [string]$ResourceGroup = 'rg-pulse-chat',
-  [ValidatePattern('^[a-z][a-z0-9-]{2,20}$')][string]$Prefix = 'pulse-chat',
+  [ValidatePattern('^[a-z][a-z0-9-]{2,20}$')][string]$Prefix = 'kamand-chat',
+  [string]$PublicWebUrl = 'https://kamandchat.highliftpages.com',
   [string]$ServerEnvFile = (Join-Path $PSScriptRoot '../server/.env')
 )
 $ErrorActionPreference = 'Stop'
@@ -43,6 +44,12 @@ $registry = $infra.registryName.value
 $registryHost = $infra.registryHost.value
 $apiUrl = $infra.apiUrl.value
 $webUrl = $infra.webUrl.value
+$existingApps = (Invoke-Azure @('containerapp', 'list', '--resource-group', $ResourceGroup, '-o', 'json')) | ConvertFrom-Json
+$webCustomDomains = @()
+$existingWeb = $existingApps | Where-Object name -eq "$Prefix-web"
+if ($existingWeb.properties.configuration.ingress.customDomains) {
+  $webCustomDomains = @($existingWeb.properties.configuration.ingress.customDomains)
+}
 $imageTag = (Get-Date -AsUTC -Format 'yyyyMMddHHmmss')
 Invoke-Azure @('acr', 'login', '--name', $registry, '--output', 'none')
 Invoke-Docker @('build', '--platform', 'linux/amd64', '--tag', "$registryHost/pulse-api:$imageTag", (Join-Path $projectRoot 'server'))
@@ -55,6 +62,9 @@ $parameters = @{
   identityId = @{ value = $infra.identityId.value }
   registryHost = @{ value = $registryHost }; imageTag = @{ value = $imageTag }
   apiUrl = @{ value = $apiUrl }; webUrl = @{ value = $webUrl }
+  clientOrigins = @{ value = (@($webUrl, $PublicWebUrl) | Where-Object { $_ } | Select-Object -Unique) -join ',' }
+  authEmailRedirectUrl = @{ value = $(if ($PublicWebUrl) { $PublicWebUrl } else { $webUrl }) }
+  webCustomDomains = @{ value = $webCustomDomains }
   supabaseUrl = @{ value = $runtimeSettings['SUPABASE_URL'] }
   supabaseKey = @{ value = $supabaseKey }
 }
@@ -65,7 +75,11 @@ try {
 } finally {
   Remove-Item -LiteralPath $parameterFile -Force -ErrorAction SilentlyContinue
 }
-foreach ($url in @("$apiUrl/health", "$apiUrl/ready", $webUrl)) {
+$verificationUrls = @("$apiUrl/health", "$apiUrl/ready", $webUrl)
+if ($PublicWebUrl -and ($webCustomDomains.name -contains ([uri]$PublicWebUrl).Host)) {
+  $verificationUrls += $PublicWebUrl
+}
+foreach ($url in $verificationUrls) {
   $healthy = $false
   for ($attempt = 0; $attempt -lt 12; $attempt++) {
     try {
@@ -77,4 +91,5 @@ foreach ($url in @("$apiUrl/health", "$apiUrl/ready", $webUrl)) {
   Write-Host "Verified $url"
 }
 Write-Host "Website: $webUrl"
+if ($PublicWebUrl) { Write-Host "Public domain (requires DNS and certificate binding): $PublicWebUrl" }
 Write-Host "API: $apiUrl"

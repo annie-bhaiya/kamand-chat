@@ -37,7 +37,7 @@ try {
   // Directory fallback is optional
 }
 
-export function authRoutes(factory: ClientFactory, events: Events) {
+export function authRoutes(factory: ClientFactory, events: Events, emailRedirectTo: string) {
   const router = Router();
   const limiter = process.env.NODE_ENV === 'development'
     ? (_req: any, _res: any, next: any) => next()
@@ -55,7 +55,7 @@ export function authRoutes(factory: ClientFactory, events: Events) {
   });
   router.post('/register', limiter, async (req, res) => {
     const input = registerSchema.parse(req.body);
-    const data = unwrap(await factory().auth.signUp({ email: input.email, password: input.password, options: { data: { display_name: input.display_name } } }));
+    const data = unwrap(await factory().auth.signUp({ email: input.email, password: input.password, options: { emailRedirectTo, data: { display_name: input.display_name } } }));
     res.status(201).json({ data: { user: data.user, session: data.session, requires_email_confirmation: !data.session } });
   });
   router.post('/login', limiter, async (req, res) => {
@@ -78,6 +78,7 @@ export function authRoutes(factory: ClientFactory, events: Events) {
         email: input.email,
         password: input.password,
         options: {
+          emailRedirectTo,
           data: {
             display_name: displayName,
             ...(rollNumber ? { username: rollNumber.toLowerCase() } : {}),
