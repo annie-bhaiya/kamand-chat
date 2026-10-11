@@ -85,4 +85,4 @@ npm.cmd start
 
 The campus calendar and maintenance panels use Supabase-backed records. Organizers can edit, reschedule, cancel and update their own events; assigned caretakers and mess managers can update ticket status. Ticket votes, progress history and resolution timestamps persist. Open panels refresh on realtime change hints, reconnect and focus, with a 30-second fallback. Apply the server's calendar/maintenance migration before using these features; Moodle remains a separate sample integration.
 
-Run `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. The design system is recorded in `../DESIGN.md`, with review captures in `../.impeccable/review`.
+Run `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. Local design context and review captures are stored in the ignored `../.agentic/` folder.

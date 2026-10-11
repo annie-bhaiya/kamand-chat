@@ -124,6 +124,21 @@ export function authRoutes(factory: ClientFactory, events: Events, emailRedirect
     const data = unwrap(await factory().auth.refreshSession(refreshSchema.parse(req.body)));
     res.json({ data });
   });
+  router.post('/forgot-password', limiter, async (req, res) => {
+    const { email } = z.object({ email: z.email().max(254) }).strict().parse(req.body);
+    unwrap(await factory().auth.resetPasswordForEmail(email, { redirectTo: emailRedirectTo }));
+    res.json({ data: { message: 'If an account exists, a password reset link has been sent.' } });
+  });
+  router.post('/reset-password', limiter, authMiddleware(factory), async (req, res) => {
+    const input = refreshSchema.extend({ password: z.string().min(8).max(128) }).parse(req.body);
+    const client = factory();
+    unwrap(await client.auth.setSession({ access_token: req.accessToken, refresh_token: input.refresh_token }));
+    unwrap(await client.auth.updateUser({ password: input.password }));
+    invalidateAuth(req.accessToken);
+    unwrap(await client.auth.signOut({ scope: 'local' }));
+    events.logout(req.sessionId);
+    res.status(204).end();
+  });
   router.get('/me', authMiddleware(factory), async (req, res) => {
     const profile = unwrap(await req.db.from('profiles').select('*').eq('id', req.user.id).single());
     res.json({ data: { user: req.user, profile } });

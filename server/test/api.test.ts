@@ -10,7 +10,7 @@ import { attachRealtime } from '../src/realtime.js';
 import { encodeActivityCursor } from '../src/validation.js';
 
 const user = randomUUID(), sessionId = randomUUID(), conversationId = randomUUID(), other = randomUUID();
-const token = `header.${Buffer.from(JSON.stringify({ sub: user, session_id: sessionId, exp: Math.floor(Date.now()/1000)+3600 })).toString('base64url')}.signature`;
+const token = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user, session_id: sessionId, exp: Math.floor(Date.now()/1000)+3600 })).toString('base64url')}.${Buffer.from('fixture-signature').toString('base64url')}`;
 const calls: { method: string; path: string; authorization: string; body: any }[] = [];
 let upstream: Server, http: Server, app: ReturnType<typeof createApp>['app'];
 let realtime: ReturnType<typeof attachRealtime>;
@@ -33,6 +33,8 @@ before(async () => {
     const authorization = String(req.headers.authorization ?? '');
     calls.push({ method: req.method ?? '', path, authorization, body });
     res.setHeader('Content-Type', 'application/json');
+    if (path.startsWith('/auth/v1/recover')) { res.end('{}'); return; }
+    if (path === '/auth/v1/logout?scope=local') { res.statusCode = 204; res.end(); return; }
     if (path === '/auth/v1/user') {
       if (authorization !== `Bearer ${token}`) { res.statusCode = 401; res.end(JSON.stringify({ message: 'Invalid JWT', code: 'bad_jwt' })); return; }
       res.end(JSON.stringify({ id: user, email: 'alice@example.com', aud: 'authenticated', role: 'authenticated' })); return;
@@ -108,6 +110,26 @@ test('protected endpoints reject missing and invalid Bearer tokens', async () =>
   await request(app).get('/api/conversations').expect(401);
   await request(app).get('/api/conversations').set('Authorization','Bearer invalid').expect(401);
   await request(app).get('/api/conversations').set('Authorization','Basic invalid').expect(401);
+});
+
+test('password recovery validates input and uses the configured redirect', async () => {
+  await request(app).post('/api/auth/forgot-password').send({ email: 'invalid' }).expect(400);
+  const response = await request(app).post('/api/auth/forgot-password').send({ email: 'alice@example.com' }).expect(200);
+  assert.match(response.body.data.message, /If an account exists/);
+  const recovery = calls.filter(c => c.path.startsWith('/auth/v1/recover')).at(-1)!;
+  assert.equal(recovery.body.email, 'alice@example.com');
+  assert.equal(new URL(recovery.path, 'http://fixture').searchParams.get('redirect_to'), 'https://kamandchat.highliftpages.com');
+});
+
+test('password update requires a valid session and revokes it after updating', async () => {
+  await request(app).post('/api/auth/reset-password').send({ password: 'StrongPass123!', refresh_token: 'refresh' }).expect(401);
+  await request(app).post('/api/auth/reset-password').set('Authorization', 'Bearer invalid').send({ password: 'StrongPass123!', refresh_token: 'refresh' }).expect(401);
+  await request(app).post('/api/auth/reset-password').set('Authorization', `Bearer ${token}`).send({ password: 'short', refresh_token: 'refresh' }).expect(400);
+  await request(app).post('/api/auth/reset-password').set('Authorization', `Bearer ${token}`).send({ password: 'StrongPass123!', refresh_token: 'refresh' }).expect(204);
+  const update = calls.filter(c => c.path === '/auth/v1/user' && c.method === 'PUT').at(-1)!;
+  assert.equal(update.authorization, `Bearer ${token}`);
+  assert.equal(update.body.password, 'StrongPass123!');
+  assert.ok(calls.some(c => c.path === '/auth/v1/logout?scope=local'));
 });
 test('verified user token is passed to Supabase RLS queries', async () => {
   const response = await authenticated().expect(200);

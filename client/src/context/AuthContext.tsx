@@ -29,6 +29,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const restoreSession = useCallback(async () => {
     const operation = ++generation.current;
     try {
+      // Recovery links must open the password form even when another session is saved.
+      const hash = new URLSearchParams(window.location.hash.slice(1));
+      if (hash.get('type') === 'recovery' || hash.has('error')) return;
       if (!api.getAccessToken()) return;
       let response;
       try { response = await api.getMe(); }

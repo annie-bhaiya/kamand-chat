@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthCard } from '@/components/auth/AuthCard';
+import { AssistantPanel } from '@/components/assistant/AssistantPanel';
 import { CampusTicketDrawer } from '@/components/campus/CampusTicketDrawer';
 import { GymkhanaCalendarModal } from '@/components/campus/GymkhanaCalendarModal';
 import { MessMenuDrawer } from '@/components/campus/MessMenuDrawer';
@@ -119,6 +120,7 @@ function ChatAppContent() {
       />
 
       {/* Modals & Drawers */}
+      <AssistantPanel />
       <ResidenceOnboardingModal
         isOpen={Boolean(isAuthenticated && profile && !profile.chat_only && (!profile.hostel || !profile.mess || !profile.branch || !profile.hostel_block))}
       />

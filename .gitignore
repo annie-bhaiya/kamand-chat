@@ -7,3 +7,8 @@ coverage/
 server/supabase/.temp/
 server/supabase/.branches/
 server/.test-artifacts/
+
+# Local coding plans, design context and review artifacts
+.agentic/
+# Next.js recreates this coding guidance during development.
+client/AGENTS.md

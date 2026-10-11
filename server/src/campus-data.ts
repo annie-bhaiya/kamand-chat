@@ -61,7 +61,7 @@ export interface MessDayMenu {
   specialNotice?: string;
 }
 
-// Full catalogue of IIT Mandi Scoped Rooms according to a.md
+// Full catalogue of IIT Mandi scoped rooms.
 export const CAMPUS_ROOMS: CampusRoomDef[] = [
   // 1. CLUBS & SOCIETIES
   // Technical Society (SnTC)

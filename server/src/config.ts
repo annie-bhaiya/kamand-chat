@@ -18,11 +18,13 @@ const schema = z.object({
   AVATARS_BUCKET: z.string().default('avatars'),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().max(10485760).default(10485760),
   REDIS_URL: z.string().optional(),
+  GEMINI_API_KEY: z.string().min(10).optional(),
+  GEMINI_MODEL: z.string().regex(/^[a-zA-Z0-9._-]+$/).default('gemini-3.8-flash'),
 });
 
 export type Config = z.infer<typeof schema>;
 export function loadConfig(env = process.env): Config {
-  const parsed = schema.safeParse({ ...env, SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY });
+  const parsed = schema.safeParse({ ...env, GEMINI_API_KEY: env.GEMINI_API_KEY || undefined, SUPABASE_PUBLISHABLE_KEY: env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY });
   if (!parsed.success) {
     throw new Error(`Invalid configuration: ${parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')}. See .env.example.`);
   }

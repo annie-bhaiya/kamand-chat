@@ -14,6 +14,11 @@ Profile,
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export class ApiClient {
+  async assistant(input: { message?: string; sessionId?: string; decision?: 'confirm' | 'cancel'; approvalId?: string; conversationId?: string | null }) {
+    return this.request<import('@/types/assistant').AssistantReply>('/api/assistant', {
+      method: 'POST', body: JSON.stringify(input), signal: AbortSignal.timeout(100000),
+    });
+  }
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private refreshPromise: Promise<string | null> | null = null;
@@ -191,6 +196,19 @@ export class ApiClient {
   }
 
   // --- Auth API ---
+  async forgotPassword(email: string) {
+    return this.request<{ message: string }>('/api/auth/forgot-password', {
+      method: 'POST', body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(password: string, session: { access_token: string; refresh_token: string }) {
+    return this.request('/api/auth/reset-password', {
+      method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ password, refresh_token: session.refresh_token }),
+    });
+  }
+
   async checkUser(email: string): Promise<{ exists: boolean; display_name?: string; username?: string }> {
     const res = await this.request<{ exists: boolean; display_name?: string; username?: string }>('/api/auth/check', {
       method: 'POST',

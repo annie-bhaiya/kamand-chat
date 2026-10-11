@@ -26,7 +26,7 @@ function Invoke-Docker {
 # Read only runtime settings. SQL/admin credentials never enter an image or Azure.
 $runtimeSettings = @{}
 Get-Content -LiteralPath $ServerEnvFile | ForEach-Object {
-  if ($_ -match '^\s*(SUPABASE_URL|SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY)\s*=(.*)$') {
+  if ($_ -match '^\s*(SUPABASE_URL|SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY|GEMINI_API_KEY|GEMINI_MODEL)\s*=(.*)$') {
     $runtimeSettings[$Matches[1]] = $Matches[2].Trim().Trim('"').Trim("'")
   }
 }
@@ -67,6 +67,8 @@ $parameters = @{
   webCustomDomains = @{ value = $webCustomDomains }
   supabaseUrl = @{ value = $runtimeSettings['SUPABASE_URL'] }
   supabaseKey = @{ value = $supabaseKey }
+  geminiApiKey = @{ value = [string]$runtimeSettings['GEMINI_API_KEY'] }
+  geminiModel = @{ value = $(if ($runtimeSettings['GEMINI_MODEL']) { $runtimeSettings['GEMINI_MODEL'] } else { 'gemini-3.8-flash' }) }
 }
 $parameterFile = Join-Path ([IO.Path]::GetTempPath()) "pulse-deploy-$([guid]::NewGuid()).json"
 try {

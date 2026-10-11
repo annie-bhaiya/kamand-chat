@@ -12,6 +12,9 @@ param webCustomDomains array = []
 param supabaseUrl string
 @secure()
 param supabaseKey string
+@secure()
+param geminiApiKey string = ''
+param geminiModel string = 'gemini-3.8-flash'
 
 resource api 'Microsoft.App/containerApps@2025-01-01' = {
   name: '${prefix}-api'
@@ -27,14 +30,14 @@ resource api 'Microsoft.App/containerApps@2025-01-01' = {
       activeRevisionsMode: 'Single'
       ingress: { external: true, targetPort: 4000, transport: 'auto', allowInsecure: false }
       registries: [{ server: registryHost, identity: identityId }]
-      secrets: [{ name: 'supabase-key', value: supabaseKey }]
+      secrets: concat([{ name: 'supabase-key', value: supabaseKey }], empty(geminiApiKey) ? [] : [{ name: 'gemini-api-key', value: geminiApiKey }])
     }
     template: {
       containers: [{
         name: 'api'
         image: '${registryHost}/pulse-api:${imageTag}'
         resources: { cpu: json('0.5'), memory: '1Gi' }
-        env: [
+        env: concat([
           { name: 'NODE_ENV', value: 'production' }
           { name: 'HOST', value: '0.0.0.0' }
           { name: 'PORT', value: '4000' }
@@ -43,7 +46,8 @@ resource api 'Microsoft.App/containerApps@2025-01-01' = {
           { name: 'AUTH_EMAIL_REDIRECT_URL', value: authEmailRedirectUrl }
           { name: 'SUPABASE_URL', value: supabaseUrl }
           { name: 'SUPABASE_PUBLISHABLE_KEY', secretRef: 'supabase-key' }
-        ]
+          { name: 'GEMINI_MODEL', value: geminiModel }
+        ], empty(geminiApiKey) ? [] : [{ name: 'GEMINI_API_KEY', secretRef: 'gemini-api-key' }])
         probes: [
           { type: 'Startup', httpGet: { path: '/health', port: 4000 }, periodSeconds: 5, failureThreshold: 30 }
           { type: 'Liveness', httpGet: { path: '/health', port: 4000 }, periodSeconds: 30, failureThreshold: 3 }
@@ -86,7 +90,8 @@ resource web 'Microsoft.App/containerApps@2025-01-01' = {
           { type: 'Readiness', httpGet: { path: '/', port: 3000 }, periodSeconds: 10, failureThreshold: 3 }
         ]
       }]
-      scale: { minReplicas: 0, maxReplicas: 2, rules: [{ name: 'http', http: { metadata: { concurrentRequests: '50' } } }] }
+      // Keep a warm frontend available; scaling to zero delays the first visit after idle.
+      scale: { minReplicas: 1, maxReplicas: 2, rules: [{ name: 'http', http: { metadata: { concurrentRequests: '50' } } }] }
     }
   }
 }

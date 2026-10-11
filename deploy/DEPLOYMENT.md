@@ -1,5 +1,7 @@
 # Current Azure deployment
 
+On 11 October 2026, the live frontend scaling configuration was updated from zero to one minimum replica (maximum remains two). Revision `kamand-chat-web--0000002` is the latest ready revision. The public site returned HTTP 200 with a 2.79-second first-byte time in one spot check. This update keeps a frontend replica warm after idle; it uses the existing deployed image. The matching Bicep template now preserves that setting on redeployment. The new password-recovery application code has not yet been deployed. Local verification passed 70 backend and 47 frontend tests, both type checks, both application builds, the changed-auth lint check and Bicep compilation. Docker container verification was blocked by an unavailable Docker Desktop Linux engine. Hosted Supabase recovery redirects and email delivery have not been verified end to end.
+
 Deployed and verified on 10 October 2026 using the signed-in **Azure for Students** subscription.
 
 | Setting | Value |

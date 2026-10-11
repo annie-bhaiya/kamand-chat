@@ -16,6 +16,7 @@ import { attachmentRoutes } from './routes/attachments.js';
 import { campusRoutes } from './routes/campus.js';
 import { openapi } from './openapi.js';
 import { simulationRoutes } from './simulation.js';
+import { assistantRoutes } from './routes/assistant.js';
 
 export function createApp(config: Config, options: { factory?: ClientFactory; events?: Events } = {}) {
   const app = express();
@@ -48,6 +49,7 @@ export function createApp(config: Config, options: { factory?: ClientFactory; ev
   app.use('/api/campus', optionalAuthMiddleware(factory), campusRoutes(factory, events));
   app.use('/api/users', optionalAuthMiddleware(factory), publicUserRoutes());
   app.use('/api', authMiddleware(factory));
+  app.use('/api/assistant', assistantRoutes(config));
   app.use('/api/users', userRoutes());
   app.use('/api/conversations', conversationRoutes(events));
   app.use('/api/messages', messageRoutes(events));
