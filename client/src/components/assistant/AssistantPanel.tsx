@@ -45,6 +45,7 @@ export function AssistantPanel() {
     <button className="assistant-launcher" onClick={() => setOpen(true)} aria-label="Open Kamand assistant" aria-expanded={open}>
       <Bot size={20} /><span>Assistant</span>
     </button>
+
     {open && <div className="assistant-overlay" onClick={event => { if (event.target === event.currentTarget) setOpen(false); }}>
       <div className="assistant-panel" role="dialog" aria-modal="true" aria-labelledby="assistant-title" ref={panelRef} tabIndex={-1}>
         <header className="assistant-header">

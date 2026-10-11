@@ -173,8 +173,8 @@ const GroupInfoContent: React.FC<GroupInfoDrawerProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-              aria-pressed={activeTab === 'overview'}
-              className={`nav-pill ${activeTab === 'overview' ? 'active' : ''}`}
+            aria-pressed={activeTab === 'overview'}
+            className={`nav-pill ${activeTab === 'overview' ? 'active' : ''}`}
             style={{
               flex: 1,
               padding: '7px 12px',
@@ -196,8 +196,8 @@ const GroupInfoContent: React.FC<GroupInfoDrawerProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('search')}
-              aria-pressed={activeTab === 'search'}
-              className={`nav-pill ${activeTab === 'search' ? 'active' : ''}`}
+            aria-pressed={activeTab === 'search'}
+            className={`nav-pill ${activeTab === 'search' ? 'active' : ''}`}
             style={{
               flex: 1,
               padding: '7px 12px',
@@ -219,8 +219,8 @@ const GroupInfoContent: React.FC<GroupInfoDrawerProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('attachments')}
-              aria-pressed={activeTab === 'attachments'}
-              className={`nav-pill ${activeTab === 'attachments' ? 'active' : ''}`}
+            aria-pressed={activeTab === 'attachments'}
+            className={`nav-pill ${activeTab === 'attachments' ? 'active' : ''}`}
             style={{
               flex: 1,
               padding: '7px 12px',

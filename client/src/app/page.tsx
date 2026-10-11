@@ -12,8 +12,8 @@ import { Sidebar } from '@/components/sidebar/Sidebar';
 import { VisualSettingsProvider } from '@/components/settings/VisualSettings';
 import { ToastProvider } from '@/components/ui/Toast';
 import { messRoomSlug } from '@/lib/residence';
-import { AuthProvider,useAuth } from '@/context/AuthContext';
-import { ChatProvider,useChat } from '@/context/ChatContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ChatProvider, useChat } from '@/context/ChatContext';
 import { MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 
@@ -135,7 +135,7 @@ function ChatAppContent() {
         onClose={() => setIsCalendarOpen(false)}
         defaultOrganizer={calendarOrganizer}
         isAdmin={calendarIsAdmin}
-      />} 
+      />}
 
       {isTicketDrawerOpen && <CampusTicketDrawer
         isOpen={isTicketDrawerOpen}
@@ -143,7 +143,7 @@ function ChatAppContent() {
         defaultScope={ticketScope}
         defaultClusterOrMess={ticketClusterOrMess}
         isAdmin={ticketIsAdmin}
-      />} 
+      />}
 
 
       {isMessDrawerOpen && <MessMenuDrawer
@@ -156,7 +156,7 @@ function ChatAppContent() {
           setTicketClusterOrMess(messName);
           setIsTicketDrawerOpen(true);
         }}
-      />} 
+      />}
     </div>
   );
 }
@@ -166,9 +166,9 @@ export default function Home() {
     <ToastProvider>
       <AuthProvider>
         <VisualSettingsProvider>
-        <ChatProvider>
-          <ChatAppContent />
-        </ChatProvider>
+          <ChatProvider>
+            <ChatAppContent />
+          </ChatProvider>
         </VisualSettingsProvider>
       </AuthProvider>
     </ToastProvider>

@@ -7,10 +7,10 @@ import { useChat } from '@/context/ChatContext';
 import { getConversationMembers, getMemberProfile, getOtherMember } from '@/lib/utils';
 import { Profile } from '@/types/chat';
 import {
-Calendar, UtensilsCrossed, MessageSquare,
-Plus,
+  Calendar, UtensilsCrossed, MessageSquare,
+  Plus,
 } from 'lucide-react';
-import React,{ useState } from 'react';
+import React, { useState } from 'react';
 import { ChatHeader } from './ChatHeader';
 import { MessageComposer } from './MessageComposer';
 import { MessageList } from './MessageList';
@@ -119,7 +119,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         members={members}
       />
 
-      {/* Direct conversation expanded modal (with embedded chat search & attachments grid) */}
       {activeConversation.type === 'direct' && isInfoOpen && (
         <UserProfileModal
           isOpen={isInfoOpen}

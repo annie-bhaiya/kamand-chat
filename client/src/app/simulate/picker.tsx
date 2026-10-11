@@ -24,7 +24,7 @@ export default function SimulationPicker() {
     try {
       const response = await api.request<{ session: AuthSession }>('/api/simulate', { method: 'POST', body: JSON.stringify({ username }) });
       if (!response.data.session) throw new Error('No session returned. Run the seed script and retry.');
-      // The full navigation remounts both auth and chat state for the selected account.
+
       socketManager.disconnect();
       api.setSession(response.data.session);
       // A full remount clears the previous user's chat context after a role switch.

@@ -1,8 +1,8 @@
 'use client';
 
 import { Modal } from '@/components/ui/Modal';
-import { Check,Monitor,Moon,RotateCcw,Sun,Building } from 'lucide-react';
-import React,{ createContext,useContext,useEffect,useRef,useState } from 'react';
+import { Check, Monitor, Moon, RotateCcw, Sun, Building } from 'lucide-react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useOptionalAuth } from '@/context/AuthContext';
 import { HOSTEL_OPTIONS, HOSTEL_BLOCK_MAP, MESS_OPTIONS, BRANCH_OPTIONS } from '@/lib/residence';
 
@@ -15,7 +15,7 @@ type Preferences = {
 };
 const defaults: Preferences = { appearance: 'system', accent: 'pine', textSize: 'default', density: 'comfortable', reduceMotion: false };
 const storageKey = 'kamand-visual-settings';
-const VisualContext = createContext<{ openSettings: () => void }>({ openSettings: () => {} });
+const VisualContext = createContext<{ openSettings: () => void }>({ openSettings: () => { } });
 export const useVisualSettings = () => useContext(VisualContext);
 
 function readPreferences(): Preferences {

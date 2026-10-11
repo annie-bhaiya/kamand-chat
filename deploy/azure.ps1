@@ -81,6 +81,7 @@ $verificationUrls = @("$apiUrl/health", "$apiUrl/ready", $webUrl)
 if ($PublicWebUrl -and ($webCustomDomains.name -contains ([uri]$PublicWebUrl).Host)) {
   $verificationUrls += $PublicWebUrl
 }
+
 foreach ($url in $verificationUrls) {
   $healthy = $false
   for ($attempt = 0; $attempt -lt 12; $attempt++) {

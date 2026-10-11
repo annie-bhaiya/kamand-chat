@@ -8,12 +8,12 @@ import { useAuth } from '@/context/AuthContext';
 import { ALL_CAMPUS_ROOMS } from '@/lib/campus-rooms';
 import { CampusEvent } from '@/types/chat';
 import {
-Calendar as CalendarIcon,
-Clock,
-MapPin,
-Plus
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  Plus
 } from 'lucide-react';
-import React,{ useEffect,useEffectEvent,useRef,useState } from 'react';
+import React, { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useCampusPermissions } from './useCampusPermissions';
 
 interface GymkhanaCalendarModalProps {
@@ -85,7 +85,7 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
       const c = selectedCategory === 'All Categories' ? undefined : selectedCategory;
       const res = await api.getCampusEvents(v, c);
       if (generation !== loadGeneration.current) return;
-        setEvents(res.data || []);
+      setEvents(res.data || []);
     } catch (err: unknown) {
       if (generation !== loadGeneration.current) return;
       error((err instanceof Error ? err.message : '') || 'Failed to load Gymkhana calendar events.');
@@ -104,8 +104,6 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
     const timer = window.setInterval(focus, 30000);
     return () => { off(); connected(); window.removeEventListener('focus', focus); window.clearInterval(timer); };
   }, [isOpen]);
-  // Fetch state follows the external request lifecycle.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (isOpen) loadOnOpen(); return () => { loadGeneration.current += 1; }; }, [isOpen, selectedVenue, selectedCategory]);
 
   const handleBookEvent = async (e: React.FormEvent) => {
@@ -170,19 +168,19 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
       <div className="campus-toolbar">
         <label>Venue<select className="input-control" value={selectedVenue} onChange={e => setSelectedVenue(e.target.value)}>{VENUES.map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Event type<select className="input-control" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>{CATEGORIES.map(value => <option key={value}>{value}</option>)}</select></label>
-        {(canBook || user?.app_metadata?.campus_rooms?.length) && <button className="btn btn-filled" data-tone="calendar" onClick={() => { setEditingId(null); setShowBookingForm(value => !value); }}><Plus size={16}/>{showBookingForm ? 'Close form' : 'Plan an event'}</button>}
+        {(canBook || user?.app_metadata?.campus_rooms?.length) && <button className="btn btn-filled" data-tone="calendar" onClick={() => { setEditingId(null); setShowBookingForm(value => !value); }}><Plus size={16} />{showBookingForm ? 'Close form' : 'Plan an event'}</button>}
       </div>
       {showBookingForm && <form className="campus-form" onSubmit={handleBookEvent}>
         <h4>{editingId ? 'Edit or reschedule event' : 'Plan an event'}</h4>
-        <label>Event title<input className="input-control" required minLength={3} maxLength={120} value={title} onChange={e => setTitle(e.target.value)}/></label>
-        <label>Description<textarea className="input-control" rows={3} value={description} onChange={e => setDescription(e.target.value)}/></label>
+        <label>Event title<input className="input-control" required minLength={3} maxLength={120} value={title} onChange={e => setTitle(e.target.value)} /></label>
+        <label>Description<textarea className="input-control" rows={3} value={description} onChange={e => setDescription(e.target.value)} /></label>
         <div className="campus-form-grid">
           <label>Organizer<select className="input-control" required value={organizer} onChange={e => setOrganizer(e.target.value)}>{ALL_CAMPUS_ROOMS.map(room => <option key={room.slug} value={room.name}>{room.name}</option>)}</select></label>
           <label>Event type<select className="input-control" value={category} onChange={e => setCategory(e.target.value as CampusEvent['category'])}>{CATEGORIES.slice(1).map(value => <option key={value}>{value}</option>)}</select></label>
           <label>Venue<select className="input-control" value={venue} onChange={e => setVenue(e.target.value as CampusEvent['venue'])}>{[...VENUES.slice(1), 'Other'].map(value => <option key={value}>{value}</option>)}</select></label>
-          <label>Date<input className="input-control" type="date" required value={date} onChange={e => setDate(e.target.value)}/></label>
-          <label>Starts at<input className="input-control" type="time" required value={startTime} onChange={e => setStartTime(e.target.value)}/></label>
-          <label>Ends at<input className="input-control" type="time" required value={endTime} onChange={e => setEndTime(e.target.value)}/></label>
+          <label>Date<input className="input-control" type="date" required value={date} onChange={e => setDate(e.target.value)} /></label>
+          <label>Starts at<input className="input-control" type="time" required value={startTime} onChange={e => setStartTime(e.target.value)} /></label>
+          <label>Ends at<input className="input-control" type="time" required value={endTime} onChange={e => setEndTime(e.target.value)} /></label>
         </div>
         {!canBook && <p>Choose an organizer whose events you manage.</p>}
         <button className="btn btn-filled" data-tone="calendar" disabled={submitting || !canBook} type="submit">{submitting ? 'Saving…' : 'Save event'}</button>
@@ -190,8 +188,8 @@ export const GymkhanaCalendarModal: React.FC<GymkhanaCalendarModalProps> = ({
       {loading ? <p className="campus-state" role="status">Loading events…</p> : !events.length ? <p className="campus-state">No events match these filters.</p> : <div className="campus-records">{events.map(event => <article className="campus-record" key={event.id}>
         <div className="campus-record-meta"><span>{event.category}</span><span className="campus-status" data-status={event.status}>{event.status === 'approved' ? 'Scheduled' : event.status}</span></div>
         <h4>{event.title}</h4><p>{event.description}</p>
-        <div className="campus-record-meta"><CalendarIcon size={15}/><time dateTime={event.date}>{new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' })}</time><Clock size={15}/>{event.startTime} – {event.endTime}</div>
-        <div className="campus-record-meta"><MapPin size={15}/>{event.venue} · {event.organizer}</div>
+        <div className="campus-record-meta"><CalendarIcon size={15} /><time dateTime={event.date}>{new Date(`${event.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' })}</time><Clock size={15} />{event.startTime} – {event.endTime}</div>
+        <div className="campus-record-meta"><MapPin size={15} />{event.venue} · {event.organizer}</div>
         {event.canManage && <div className="campus-toolbar"><button type="button" className="btn btn-tonal" data-tone="calendar" disabled={submitting} onClick={() => editEvent(event)}>Edit or reschedule</button><label>Status<select className="input-control" value={event.status} disabled={changingId !== null} onChange={e => changeStatus(event, e.target.value)}>{['pending', 'approved', 'conflict', 'completed', 'cancelled'].map(status => <option key={status} value={status}>{status === 'approved' ? 'Scheduled' : status.charAt(0).toUpperCase() + status.slice(1)}</option>)}</select></label></div>}
       </article>)}</div>}
     </div>

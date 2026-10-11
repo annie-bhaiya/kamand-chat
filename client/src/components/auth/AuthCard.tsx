@@ -4,10 +4,10 @@ import { useVisualSettings } from '@/components/settings/VisualSettings';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
-import { lookupCampusUser,parseRollNumber } from '@/lib/campus';
-import { ArrowLeft,ArrowRight,CheckCircle2,Eye,EyeOff,GraduationCap,MapPin,MessageCircle,SlidersHorizontal,Users } from 'lucide-react';
+import { lookupCampusUser, parseRollNumber } from '@/lib/campus';
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, GraduationCap, MapPin, MessageCircle, SlidersHorizontal, Users } from 'lucide-react';
 import Link from 'next/link';
-import React,{ useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Stage = 'roll' | 'login' | 'register' | 'forgot' | 'reset';
 export function AuthCard() {
@@ -38,7 +38,6 @@ export function AuthCard() {
   const directoryName = parsed.isValid ? lookupCampusUser(parsed.normalizedRoll)?.name : undefined;
   useEffect(() => {
     if (recoveryLink) {
-      // Keep recovery credentials in memory and remove them from browser history.
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
     let active = true;
